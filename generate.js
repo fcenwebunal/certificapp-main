@@ -6,12 +6,15 @@ const PDFDoc   = require('pdfkit');
 const SVGtoPDF = require('svg-to-pdfkit');
 
 const ASSETS = path.join(__dirname, 'assets');
+
+// Si no existe AncizarSerif-Bold.ttf, cae a Light para no romper en producción
+const boldPath = path.join(ASSETS, 'AncizarSerif-Bold.ttf');
 const A = {
   svg:    path.join(ASSETS, 'unal_ico.svg'),
   firma:  path.join(ASSETS, 'firma.png'),
   light:  path.join(ASSETS, 'AncizarSerif-Light.ttf'),
   italic: path.join(ASSETS, 'AncizarSerif-LightItalic.ttf'),
-  bold:   path.join(ASSETS, 'AncizarSerif-Bold.ttf'),
+  bold:   fs.existsSync(boldPath) ? boldPath : path.join(ASSETS, 'AncizarSerif-Light.ttf'),
   myriad: path.join(ASSETS, 'MYRIADPRO-REGULAR.OTF'),
 };
 
@@ -57,6 +60,7 @@ function generarCertificado(datos) {
       doc.text(str, mL, yPos, { width: textW, characterSpacing: cs, ...extra });
     };
 
+    // ── Logo ──────────────────────────────────────────────────────────
     const svgStr = fs.readFileSync(A.svg, 'utf8');
     const logoW  = mm(75);
     const logoH  = logoW * (128.5 / 244.33);
@@ -64,30 +68,35 @@ function generarCertificado(datos) {
       width: logoW, height: logoH, preserveAspectRatio: 'xMidYMid meet',
     });
 
+    // ── Facultad / Sede ───────────────────────────────────────────────
     T('Ancizar', 8.2, 'FACULTAD DE CIENCIAS EXACTAS Y NATURALES', mm(63), 0.9, { lineGap: 3.5 });
     T('Ancizar', 8.2, 'SEDE MANIZALES',                           doc.y,  0.9);
 
+    // ── CERTIFICAN QUE ────────────────────────────────────────────────
     T('Ancizar', 8.2, 'CERTIFICAN QUE', mm(89), 1.1);
 
+    // ── Nombre ────────────────────────────────────────────────────────
     T('AncizarItalic', 38, nombre, mm(100), 0, { lineGap: 2 });
 
+    // ── Cédula ────────────────────────────────────────────────────────
     T('Myriad', 8.2, `IDENTIFICADO CON C.C. ${cedula}`, doc.y + 3, 0.9);
 
+    // ── Participó / Rol / Evento ──────────────────────────────────────
     let y = doc.y + mm(18);
     T('Ancizar',     8.2, `PARTICIPÓ COMO ${rol.toUpperCase()}`, y,     1.1, { lineGap: 3.5 });
     T('Ancizar',     8.2, 'EN EL',                               doc.y, 1.1, { lineGap: 3.5 });
-    // BUG 2 CORREGIDO: Bold 11pt en lugar de Light 9.5pt
     T('AncizarBold', 11,  evento,                                doc.y, 0.2);
 
-    // fechaInicio = solo el día ("15"), fechaFin = fecha completa ("17 DE OCTUBRE DE 2025")
+    // ── Fechas ────────────────────────────────────────────────────────
     y = doc.y + mm(16);
     T('Ancizar', 8.2, `REALIZADO DEL ${fechaInicio} AL ${fechaFin} EN LA CIUDAD DE`, y,     0.9, { lineGap: 3.5 });
     T('Ancizar', 8.2, `MANIZALES CON UNA INTENSIDAD DE ${horas} HORAS`,              doc.y, 0.9);
 
+    // ── Dado en ───────────────────────────────────────────────────────
     y = doc.y + mm(14);
     T('Ancizar', 8.2, `DADO EN MANIZALES, EL ${fechaCert}`, y, 0.9);
 
-    // BUG 1 CORREGIDO: calcular altura real de la imagen y poner texto DEBAJO
+    // ── Firma (primero imagen, luego texto debajo) ────────────────────
     y = doc.y + mm(16);
     const imgInfo = doc.openImage(A.firma);
     const firmaH  = mm(38) * (imgInfo.height / imgInfo.width);
