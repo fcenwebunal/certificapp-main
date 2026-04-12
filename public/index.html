@@ -4,137 +4,24 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Certificado Eventos UN</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2.5rem 1rem;
-      font-family: system-ui, -apple-system, sans-serif;
+    /* ── Fondo ── */
+    .my-bg {
       background-image:
-        linear-gradient(rgba(0,0,0,0.78), rgba(0,0,0,0.52)),
+        linear-gradient(rgba(0,0,0,0.78), rgba(0,0,0,0.5)),
         url('https://fcen.unal.edu.co/fileadmin/imagenes/fotos_paginas_programas/wpatio.jpg');
       background-size: cover;
       background-position: center;
     }
 
-    .card {
-      background: #fff;
-      border-radius: 0.75rem;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.35);
-      padding: 2rem;
-      width: 100%;
-      max-width: 26rem;
-    }
-
-    .logo-wrap {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 1.5rem;
-    }
-    .logo-wrap img { max-width: 20rem; height: 5rem; object-fit: contain; }
-
-    h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      text-align: center;
-      color: #1f2937;
-      margin-bottom: 0.25rem;
-    }
-
-    #statusCarga {
-      font-size: 0.75rem;
-      text-align: center;
-      color: #9ca3af;
-      margin-bottom: 1.25rem;
-    }
-    #statusCarga.ok  { color: #16a34a; }
-    #statusCarga.err { color: #dc2626; }
-
-    label {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: #374151;
-      margin-bottom: 0.25rem;
-    }
-
-    select, input[type="text"] {
-      width: 100%;
-      padding: 0.5rem 1rem;
-      border: 1px solid #d1d5db;
-      border-radius: 0.375rem;
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color 0.15s, box-shadow 0.15s;
-      margin-bottom: 1rem;
-      background: #fff;
-    }
-    select:focus, input:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
-    }
-    select:disabled { background: #f3f4f6; cursor: not-allowed; }
-    input.error { border-color: #ef4444; }
-
-    .btn-primary {
-      width: 100%;
-      padding: 0.6rem;
-      background: #2563eb;
-      color: #fff;
-      font-weight: 600;
-      font-size: 1rem;
-      border: none;
-      border-radius: 0.375rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .btn-primary:hover  { background: #1d4ed8; }
-    .btn-primary:active { background: #1e40af; }
-    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
-
-    .msg { margin-top: 1.25rem; display: none; }
-    .msg.visible { display: block; }
-
-    .msg-success p  { color: #16a34a; text-align: center; font-weight: 500; margin-bottom: 0.75rem; }
-    .btn-download {
-      display: block;
-      text-align: center;
-      background: #22c55e;
-      color: #fff;
-      font-weight: 600;
-      padding: 1rem;
-      border-radius: 0.375rem;
-      cursor: pointer;
-      border: none;
-      width: 100%;
-      font-size: 1rem;
-      transition: background 0.2s;
-    }
-    .btn-download:hover { background: #16a34a; }
-
-    .msg-generating { color: #2563eb; text-align: center; font-weight: 500; }
-    .msg-notfound   { color: #dc2626; text-align: center; font-weight: 500; }
-    .msg-noevento   { color: #d97706; text-align: center; font-weight: 500; }
-    .msg-error      { color: #b91c1c; text-align: center; font-weight: 500; }
-
-    .footer-note {
-      margin-top: 1.5rem;
-      font-size: 0.72rem;
-      color: #9ca3af;
-      text-align: center;
-      line-height: 1.5;
-    }
-
-    /* Spinner */
+    /* ── Spinner ── */
     .spinner {
       display: inline-block;
-      width: 1rem; height: 1rem;
-      border: 2px solid rgba(37,99,235,0.3);
-      border-top-color: #2563eb;
+      width: 1.1rem;
+      height: 1.1rem;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
       vertical-align: middle;
@@ -142,80 +29,140 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Shake */
+    /* ── Shake para error ── */
     @keyframes shake {
       0%,100% { transform: translateX(0); }
-      20%,60%  { transform: translateX(-5px); }
-      40%,80%  { transform: translateX(5px); }
+      20%,60%  { transform: translateX(-6px); }
+      40%,80%  { transform: translateX(6px); }
     }
-    .shake { animation: shake 0.35s ease; }
+    .shake { animation: shake 0.4s ease; }
   </style>
 </head>
 
-<body>
-  <div class="card">
+<body class="my-bg min-h-screen flex items-center justify-center py-10">
 
-    <div class="logo-wrap">
+  <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-md">
+
+    <!-- Logo FCEN -->
+    <div class="flex justify-center mb-6">
       <img
         src="https://fcen.unal.edu.co/fileadmin/Eventos/certificados/fcen.png"
         alt="Facultad de Ciencias Exactas y Naturales"
+        class="w-80 h-20 object-contain"
         onerror="this.style.display='none'"
       />
     </div>
 
-    <h1>Descargar Certificado</h1>
-    <p id="statusCarga">Cargando lista de participantes…</p>
+    <h1 class="text-2xl font-bold text-center text-gray-800 mb-1">Descargar Certificado</h1>
+    <p id="statusCarga" class="text-xs text-center text-gray-400 mb-5">Cargando lista de participantes…</p>
 
-    <label for="eventoSelect">Selecciona el evento:</label>
-    <select id="eventoSelect" disabled>
+    <!-- Selector de evento -->
+    <label for="eventoSelect" class="block text-sm font-medium text-gray-700 mb-1">
+      Selecciona el evento:
+    </label>
+    <select
+      id="eventoSelect"
+      disabled
+      class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2
+             focus:ring-blue-500 mb-4 disabled:bg-gray-100 disabled:cursor-not-allowed"
+    >
       <option value="">— Cargando eventos… —</option>
     </select>
 
-    <label for="cedulaInput">Número de documento:</label>
-    <input id="cedulaInput" type="text" placeholder="Ej: 1082693095" />
+    <!-- Input cédula -->
+    <label for="cedulaInput" class="block text-sm font-medium text-gray-700 mb-1">
+      Número de documento:
+    </label>
+    <input
+      id="cedulaInput"
+      type="text"
+      placeholder="Ej: 1082693095"
+      class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2
+             focus:ring-blue-500 mb-4"
+    />
 
-    <button class="btn-primary" id="btnBuscar" onclick="buscarCedula()">Buscar</button>
+    <!-- Botón buscar -->
+    <button
+      id="btnBuscar"
+      onclick="buscarCedula()"
+      class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800
+             text-white font-semibold py-2 rounded-md transition duration-200
+             disabled:opacity-60 disabled:cursor-not-allowed"
+    >
+      Buscar
+    </button>
 
-    <!-- Mensajes -->
-    <div id="msgDescarga" class="msg msg-success">
-      <p>¡Gracias por tu participación!</p>
-      <button class="btn-download" onclick="descargar()">🔽 DESCARGAR CERTIFICADO</button>
+    <!-- ── Mensajes ── -->
+    <div id="msgDescarga" class="mt-5 hidden">
+      <p class="text-green-600 text-center font-medium mb-3">¡Gracias por tu participación!</p>
+      <div id="btnDescarga"
+        class="block text-center text-white bg-green-500 hover:bg-green-600
+               font-semibold p-4 border rounded-md transition duration-200 cursor-pointer"
+        onclick="descargar()"
+      >
+        🔽 DESCARGAR CERTIFICADO
+      </div>
     </div>
 
-    <div id="msgGenerando" class="msg msg-generating">
+    <div id="msgGenerando" class="mt-5 hidden text-center text-blue-600 font-medium">
       <span class="spinner"></span>Generando certificado…
     </div>
 
-    <div id="msgNoEncontrado" class="msg msg-notfound">
-      No se encontró registro con ese número de documento en el evento seleccionado.
+    <div id="msgNoEncontrado" class="mt-5 hidden">
+      <p class="text-red-600 text-center font-medium">
+        No se encontró registro con ese número de documento en el evento seleccionado.
+      </p>
     </div>
 
-    <div id="msgSinEvento" class="msg msg-noevento">
-      Por favor selecciona un evento antes de buscar.
+    <div id="msgSinEvento" class="mt-5 hidden">
+      <p class="text-yellow-600 text-center font-medium">
+        Por favor selecciona un evento antes de buscar.
+      </p>
     </div>
 
-    <div id="msgError" class="msg msg-error">
-      Ocurrió un error al generar el certificado. Intenta de nuevo.
+    <div id="msgError" class="mt-5 hidden">
+      <p class="text-red-700 text-center font-medium">
+        Ocurrió un error al generar el certificado. Intenta de nuevo.
+      </p>
     </div>
 
-    <p class="footer-note">
-      ¿Problemas para descargar?<br>
-      <strong>comunicacionesfcen_man@unal.edu.co</strong>
-    </p>
+    <div class="mt-6 text-center">
+      <small class="text-gray-400 leading-tight">
+        ¿Problemas para descargar?
+        <strong>comunicacionesfcen_man@unal.edu.co</strong>
+      </small>
+    </div>
   </div>
 
+  <!-- ══════════════════════════════════════════════════════════════════
+       LÓGICA PRINCIPAL
+  ══════════════════════════════════════════════════════════════════ -->
   <script>
+    // ── URL del Google Sheet publicado como CSV ──────────────────────
     const SHEET_URL =
-      'https://docs.google.com/spreadsheets/d/e/2PACX-1vTqE-3NMFdjG0TG_4LBVs65PUVo4SPHy0hK3IUa04Oe37NAu5Em_lQawdyCIMuAWw/pub?output=csv';
+      'https://docs.google.com/spreadsheets/d/e/' +
+      '2PACX-1vQs97pvhV1OzQ3_t_n8no2irvjwEErBE6KNczTw3rk2L9uVwGgh4d8YCAAgevQbxw' +
+      '/pub?output=csv';
 
+    // ── Base de datos en memoria: { 'Nombre Evento': [{nombre,documento,rol}] }
     let db = {};
+
+    // ── Participante encontrado (se guarda para reutilizar en descarga)
     let participanteActual = null;
     let eventoActual       = null;
 
-    // ── Parseo CSV ────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────
+    // Parseo del CSV
+    // Estructura:
+    //   Fila 0  → nombres de evento (cols 0, 3, 6, …)
+    //   Fila 1  → cabeceras (nombre, documento, rol, …)
+    //   Fila 2+ → participantes
+    // ────────────────────────────────────────────────────────────────
     function parseCSV(text) {
+      // Normalizar saltos de línea y separar filas
       const rows = text
-        .replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
         .split('\n')
         .map(r => r.split(','));
 
@@ -223,60 +170,83 @@
 
       const eventRow = rows[0];
       const result   = {};
-      const eventCols = [];
 
+      // Detectar columnas de inicio de cada evento
+      const eventCols = [];
       for (let col = 0; col < eventRow.length; col += 3) {
         const name = (eventRow[col] || '').trim();
-        if (name) { eventCols.push({ name, col }); result[name] = []; }
+        if (name) {
+          eventCols.push({ name, col });
+          result[name] = [];
+        }
       }
 
+      // Rellenar participantes desde fila 2 en adelante
       for (let row = 2; row < rows.length; row++) {
         for (const ev of eventCols) {
           const nombre    = (rows[row][ev.col]     || '').trim();
           const documento = (rows[row][ev.col + 1] || '').trim();
           const rol       = (rows[row][ev.col + 2] || 'Asistente').trim();
-          if (nombre) result[ev.name].push({ nombre, documento, rol });
+
+          if (nombre) {
+            result[ev.name].push({ nombre, documento, rol });
+          }
         }
       }
+
       return result;
     }
 
+    // ── Normalización de documento (quita "CC " al inicio, espacios)
     function normDoc(d) {
       return (d || '').replace(/^CC\s*/i, '').replace(/\s/g, '').toLowerCase();
     }
 
-    // ── Carga inicial ─────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────
+    // Carga inicial
+    // ────────────────────────────────────────────────────────────────
     async function cargarDatos() {
       const statusEl = document.getElementById('statusCarga');
       const select   = document.getElementById('eventoSelect');
+
       try {
         const resp = await fetch(SHEET_URL);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        db = parseCSV(await resp.text());
+        const text = await resp.text();
+        db = parseCSV(text);
 
+        // Poblar selector
         select.innerHTML = '<option value="">— Selecciona un evento —</option>';
         for (const nombre of Object.keys(db)) {
           const opt = document.createElement('option');
-          opt.value = opt.textContent = nombre;
+          opt.value       = nombre;
+          opt.textContent = nombre;
           select.appendChild(opt);
         }
-        select.disabled    = false;
-        statusEl.textContent = `${Object.keys(db).length} eventos cargados ✓`;
-        statusEl.className   = 'ok';
+
+        select.disabled        = false;
+        statusEl.textContent   = `${Object.keys(db).length} eventos cargados ✓`;
+        statusEl.className     = 'text-xs text-center text-green-500 mb-5';
       } catch (err) {
         console.error(err);
         select.innerHTML     = '<option value="">Error al cargar eventos</option>';
         statusEl.textContent = 'No se pudo cargar la lista. Recarga la página.';
-        statusEl.className   = 'err';
+        statusEl.className   = 'text-xs text-center text-red-500 mb-5';
       }
     }
 
-    // ── UI helpers ────────────────────────────────────────────────────
-    const MSGS = ['msgDescarga','msgGenerando','msgNoEncontrado','msgSinEvento','msgError'];
-    function ocultarMensajes() { MSGS.forEach(id => document.getElementById(id).classList.remove('visible')); }
-    function mostrar(id)       { document.getElementById(id).classList.add('visible'); }
+    // ────────────────────────────────────────────────────────────────
+    // Búsqueda
+    // ────────────────────────────────────────────────────────────────
+    function ocultarMensajes() {
+      ['msgDescarga','msgGenerando','msgNoEncontrado','msgSinEvento','msgError']
+        .forEach(id => document.getElementById(id).classList.add('hidden'));
+    }
 
-    // ── Búsqueda ──────────────────────────────────────────────────────
+    function mostrar(id) {
+      document.getElementById(id).classList.remove('hidden');
+    }
+
     function buscarCedula() {
       ocultarMensajes();
       participanteActual = null;
@@ -284,35 +254,41 @@
 
       const evento = document.getElementById('eventoSelect').value;
       const cedula = document.getElementById('cedulaInput').value.trim();
-      const input  = document.getElementById('cedulaInput');
 
       if (!evento) { mostrar('msgSinEvento'); return; }
-
       if (!cedula) {
-        input.classList.add('error', 'shake');
-        setTimeout(() => input.classList.remove('shake'), 400);
+        const input = document.getElementById('cedulaInput');
+        input.classList.add('border-red-500', 'shake');
+        setTimeout(() => input.classList.remove('shake'), 500);
         return;
       }
-      input.classList.remove('error');
 
-      const lista = db[evento] || [];
-      const norm  = normDoc(cedula);
-      const p     = lista.find(p => normDoc(p.documento) === norm);
+      const lista       = db[evento] || [];
+      const normalizado = normDoc(cedula);
+      const participante = lista.find(p => normDoc(p.documento) === normalizado);
 
-      if (!p) { mostrar('msgNoEncontrado'); return; }
+      if (!participante) {
+        mostrar('msgNoEncontrado');
+        return;
+      }
 
-      participanteActual = p;
+      // Guardamos para la descarga
+      participanteActual = participante;
       eventoActual       = evento;
       mostrar('msgDescarga');
     }
 
-    // ── Descarga ──────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────
+    // Descarga del PDF
+    // ────────────────────────────────────────────────────────────────
     async function descargar() {
       if (!participanteActual || !eventoActual) return;
 
       ocultarMensajes();
       mostrar('msgGenerando');
-      document.getElementById('btnBuscar').disabled = true;
+
+      const btn = document.getElementById('btnBuscar');
+      btn.disabled = true;
 
       try {
         const resp = await fetch('/api/certificado', {
@@ -328,32 +304,31 @@
 
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({}));
-          throw new Error(err.detalle || err.error || 'Error ' + resp.status);
+          throw new Error(err.error || 'Error ' + resp.status);
         }
 
         const blob = await resp.blob();
         const url  = URL.createObjectURL(blob);
-        const a    = Object.assign(document.createElement('a'), {
-          href: url,
-          download: `certificado_${participanteActual.documento}.pdf`,
-        });
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `certificado_${participanteActual.documento}.pdf`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 10_000);
 
         ocultarMensajes();
-        mostrar('msgDescarga');
+        mostrar('msgDescarga');   // volver a mostrar el botón
       } catch (err) {
         console.error(err);
         ocultarMensajes();
         mostrar('msgError');
       } finally {
-        document.getElementById('btnBuscar').disabled = false;
+        btn.disabled = false;
       }
     }
 
-    // ── Init ──────────────────────────────────────────────────────────
+    // ── Permitir búsqueda con Enter ──────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
       cargarDatos();
       document.getElementById('cedulaInput')
