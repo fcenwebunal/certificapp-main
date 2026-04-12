@@ -1,13 +1,14 @@
 {
   "version": 2,
-  "functions": {
-    "api/certificado.js": {
-      "maxDuration": 30,
-      "includeFiles": "assets/**,generate.js,config/**"
-    }
-  },
+  "buildCommand": "npm install",
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/(.*)", "dest": "/public/$1" }
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
   ]
 }
