@@ -11,6 +11,7 @@ const A = {
   firma:  path.join(ASSETS, 'firma.png'),
   light:  path.join(ASSETS, 'AncizarSerif-Light.ttf'),
   italic: path.join(ASSETS, 'AncizarSerif-LightItalic.ttf'),
+  bold:   path.join(ASSETS, 'AncizarSerif-Bold.ttf'),   // ← AÑADIDO (fuente Bold requerida)
   myriad: path.join(ASSETS, 'MYRIADPRO-REGULAR.OTF'),
 };
 
@@ -25,11 +26,16 @@ const mm = v => v * 2.8346;
  * @param {string} datos.cedula
  * @param {string} datos.rol         p.ej. "ASISTENTE" | "PONENTE"
  * @param {string} datos.evento      nombre del evento en MAYÚSCULAS
- * @param {string} datos.fechaInicio p.ej. "15 DE OCTUBRE DE 2025"
+ * @param {string} datos.fechaInicio p.ej. "15"  ← solo el día de inicio
  * @param {string} datos.fechaFin    p.ej. "17 DE OCTUBRE DE 2025"
  * @param {string} datos.horas       p.ej. "25"
  * @param {string} datos.fechaCert   p.ej. "17 DE OCTUBRE DE 2025"
  * @returns {Promise<Buffer>}
+ *
+ * NOTA: Para obtener el formato compacto "DEL 15 AL 17 DE OCTUBRE DE 2025"
+ * pase fechaInicio solo con el día ("15") y fechaFin con la fecha completa
+ * ("17 DE OCTUBRE DE 2025"). Si pasa ambas con fecha completa obtendrá el
+ * formato largo visto en certificado_mal.pdf.
  */
 function generarCertificado(datos) {
   const {
@@ -61,6 +67,7 @@ function generarCertificado(datos) {
     // ── Fuentes ──────────────────────────────────────────────────────
     doc.registerFont('Ancizar',       A.light);
     doc.registerFont('AncizarItalic', A.italic);
+    doc.registerFont('AncizarBold',   A.bold);   // ← AÑADIDO
     doc.registerFont('Myriad',        A.myriad);
 
     // ── Layout ───────────────────────────────────────────────────────
@@ -96,9 +103,14 @@ function generarCertificado(datos) {
 
     // ── Participó / Rol / Evento ──────────────────────────────────────
     let y = doc.y + mm(18);
-    T('Ancizar', 8.2, `PARTICIPÓ COMO ${rol.toUpperCase()}`, y,     1.1, { lineGap: 3.5 });
-    T('Ancizar', 8.2, 'EN EL',                               doc.y, 1.1, { lineGap: 3.5 });
-    T('Ancizar', 9.5, evento,                                doc.y, 0.4);
+    T('Ancizar',     8.2, `PARTICIPÓ COMO ${rol.toUpperCase()}`, y,     1.1, { lineGap: 3.5 });
+    T('Ancizar',     8.2, 'EN EL',                               doc.y, 1.1, { lineGap: 3.5 });
+
+    // ── BUG 2 CORREGIDO: fuente Bold para el nombre del evento ────────
+    // Antes: T('Ancizar', 9.5, evento, doc.y, 0.4)
+    //        → 'Ancizar' es Light → trazo fino, no coincide con certificado_bien
+    // Ahora: 'AncizarBold' a 11 pt → trazo grueso igual al certificado de referencia
+    T('AncizarBold', 11, evento, doc.y, 0.2);
 
     // ── Fechas ────────────────────────────────────────────────────────
     y = doc.y + mm(16);
@@ -109,15 +121,22 @@ function generarCertificado(datos) {
     y = doc.y + mm(14);
     T('Ancizar', 8.2, `DADO EN MANIZALES, EL ${fechaCert}`, y, 0.9);
 
-    // ── Firma (raster comprimido) ─────────────────────────────────────
+    // ── BUG 1 CORREGIDO: firma encima del firmante ────────────────────
+    // Antes: doc.image(...) con coordenadas explícitas NO avanza doc.y,
+    //        por lo que `y = doc.y + mm(4)` quedaba ENCIMA de la imagen
+    //        → firma aparecía debajo del texto (certificado_mal.pdf)
+    // Ahora: se calcula la altura real de la imagen con doc.openImage()
+    //        y se coloca el texto en firmaY + firmaH + margen
     y = doc.y + mm(16);
+    const imgInfo = doc.openImage(A.firma);                        // ← leer metadatos
+    const firmaH  = mm(38) * (imgInfo.height / imgInfo.width);    // ← altura proporcional
     doc.image(A.firma, mL - mm(1), y, { width: mm(38) });
 
-    // ── Firmante ──────────────────────────────────────────────────────
-    y = doc.y + mm(4);
-    T('Ancizar', 8.2, 'HECTOR JAIRO OSORIO ZULUAGA',              y,     0.9, { lineGap: 3.5 });
-    T('Ancizar', 8.2, 'DECANO',                                   doc.y, 0.9, { lineGap: 3.5 });
-    T('Ancizar', 8.2, 'FACULTAD DE CIENCIAS EXACTAS Y NATURALES', doc.y, 0.9);
+    // ── Firmante (debajo de la firma) ─────────────────────────────────
+    const firmaTextY = y + firmaH + mm(4);                         // ← CORREGIDO
+    T('Ancizar', 8.2, 'HECTOR JAIRO OSORIO ZULUAGA',              firmaTextY, 0.9, { lineGap: 3.5 });
+    T('Ancizar', 8.2, 'DECANO',                                   doc.y,      0.9, { lineGap: 3.5 });
+    T('Ancizar', 8.2, 'FACULTAD DE CIENCIAS EXACTAS Y NATURALES', doc.y,      0.9);
 
     doc.end();
   });
