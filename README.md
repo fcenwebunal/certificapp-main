@@ -24,20 +24,10 @@ app/
 └── .gitignore
 ```
 
-## Configuración antes de publicar
-
-### 1. Copiar los assets
-Copia estos archivos a la carpeta `assets/`:
-- `unal_ico.svg`
-- `firma.png`
-- `AncizarSerif-Light.ttf`
-- `AncizarSerif-LightItalic.ttf`
-- `MYRIADPRO-REGULAR.OTF`
-
-### 2. Actualizar fechas de eventos
+### Actualizar fechas de eventos
 Edita `config/eventos.js` con las fechas reales de cada evento.
 
-### 3. Fuente de datos (Google Sheets)
+### Fuente de datos (Google Sheets)
 La URL del Sheet está en `public/index.html` en la constante `SHEET_URL`.
 El Sheet debe estar **publicado como CSV** (Archivo → Compartir → Publicar en la web → CSV).
 
@@ -45,26 +35,3 @@ El Sheet debe estar **publicado como CSV** (Archivo → Compartir → Publicar e
 - Fila 1: Nombre del evento (repite cada 3 columnas)
 - Fila 2: `nombre`, `documento`, `rol`
 - Filas 3+: participantes
-
-## Despliegue en Vercel
-
-```bash
-# 1. Instalar Vercel CLI (si no lo tienes)
-npm install -g vercel
-
-# 2. En la raíz del proyecto
-vercel
-
-# Para producción
-vercel --prod
-```
-
-O conecta el repositorio de GitHub directamente desde vercel.com.
-
-## Desarrollo local
-
-```bash
-npm install
-vercel dev
-```
-La app estará disponible en `http://localhost:3000`.
