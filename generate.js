@@ -18,20 +18,6 @@ const A = {
 // mm → puntos PDF
 const mm = v => v * 2.8346;
 
-/**
- * Genera un certificado PDF en memoria y devuelve el Buffer.
- *
- * @param {object} datos
- * @param {string} datos.nombre
- * @param {string} datos.cedula
- * @param {string} datos.rol         p.ej. "ASISTENTE" | "PONENTE"
- * @param {string} datos.evento      nombre del evento en MAYÚSCULAS
- * @param {string} datos.fechaInicio p.ej. "15 DE OCTUBRE DE 2025"
- * @param {string} datos.fechaFin    p.ej. "17 DE OCTUBRE DE 2025"
- * @param {string} datos.horas       p.ej. "25"
- * @param {string} datos.fechaCert   p.ej. "17 DE OCTUBRE DE 2025"
- * @returns {Promise<Buffer>}
- */
 function generarCertificado(datos) {
   const {
     nombre      = '',
@@ -50,7 +36,7 @@ function generarCertificado(datos) {
       size:    'A4',           // 595.28 × 841.89 pt
       margins: { top: 0, bottom: 0, left: 0, right: 0 },
       compress: true,
-      info: { Title: `Certificado — ${nombre}`, Creator: 'UNAL Manizales' },
+      info: { Title: `Certificado — ${nombre}`, Creator: 'FCEN - UNAL Manizales' },
     });
 
     // Recopilar chunks en memoria
@@ -67,7 +53,7 @@ function generarCertificado(datos) {
 
     // ── Layout ───────────────────────────────────────────────────────
     const PW    = 595.28;
-    const mL    = mm(21);
+    const mL    = mm(24);
     const textW = PW - mL - mm(21);
 
     const T = (font, size, str, yPos, cs = 0, extra = {}) => {
