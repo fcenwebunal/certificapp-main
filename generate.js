@@ -11,6 +11,7 @@ const A = {
   firma:  path.join(ASSETS, 'firma.png'),
   light:  path.join(ASSETS, 'AncizarSerif-Light.ttf'),
   italic: path.join(ASSETS, 'AncizarSerif-LightItalic.ttf'),
+  bold: path.join(ASSETS, 'AncizarSerif-Bold.ttf'),
   myriad: path.join(ASSETS, 'MYRIADPRO-REGULAR.OTF'),
 };
 
@@ -61,6 +62,7 @@ function generarCertificado(datos) {
     // ── Fuentes ──────────────────────────────────────────────────────
     doc.registerFont('Ancizar',       A.light);
     doc.registerFont('AncizarItalic', A.italic);
+    doc.registerFont('AncizarBold', A.bold);
     doc.registerFont('Myriad',        A.myriad);
 
     // ── Layout ───────────────────────────────────────────────────────
@@ -98,7 +100,7 @@ function generarCertificado(datos) {
     let y = doc.y + mm(18);
     T('Ancizar', 8.2, `PARTICIPÓ COMO ${rol.toUpperCase()}`, y,     1.1, { lineGap: 3.5 });
     T('Ancizar', 8.2, 'EN EL',                               doc.y, 1.1, { lineGap: 3.5 });
-    T('Ancizar', 9.5, evento,                                doc.y, 0.4);
+    T('AncizarBold', 9.5, evento,                                doc.y, 0.4);
 
     // ── Fechas ────────────────────────────────────────────────────────
     y = doc.y + mm(16);
