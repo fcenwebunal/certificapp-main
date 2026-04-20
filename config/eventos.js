@@ -1,7 +1,5 @@
 'use strict';
 
-// ── URL de la pestaña "Eventos" publicada como CSV ──────────────────
-// Cambia el gid=XXXXXXX por el número real de tu pestaña
 const EVENTOS_CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/' +
   '2PACX-1vTqE-3NMFdjG0TG_4LBVs65PUVo4SPHy0hK3IUa04Oe37NAu5Em_lQawdyCIMuAWw' +
