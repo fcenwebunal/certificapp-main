@@ -1,13 +1,8 @@
 'use strict';
 
 const { generarCertificado } = require('../generate');
-const EVENTOS = require('../config/eventos');
+const { getEventos }         = require('../config/eventos');
 
-/**
- * POST /api/certificado
- * Body JSON: { nombre, cedula, rol, eventoKey }
- * Responde con el PDF binario para descarga directa.
- */
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
@@ -20,7 +15,9 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Faltan datos del participante' });
     }
 
-    const meta = EVENTOS[eventoKey];
+    const EVENTOS = await getEventos();
+    const meta    = EVENTOS[eventoKey];
+
     if (!meta) {
       return res.status(400).json({ error: `Evento desconocido: ${eventoKey}` });
     }
@@ -30,14 +27,13 @@ module.exports = async (req, res) => {
       cedula,
       rol:         (rol || 'ASISTENTE').toUpperCase(),
       evento:      meta.evento,
-      fechaInicio: meta.fechaInicio,
-      fechaFin:    meta.fechaFin,
+      fecha:       meta.fecha,
       horas:       meta.horas,
       fechaCert:   meta.fechaCert,
     });
 
     const safeName = nombre
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // quitar tildes
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-zA-Z0-9 ]/g, '')
       .trim()
       .replace(/\s+/g, '_');
