@@ -1,61 +1,49 @@
-/**
- * config/eventos.js
- *
- * Metadatos de cada evento: nombre oficial (en MAYÚSCULAS para el PDF),
- * fechas y horas de intensidad.
- *
- * ⚠️  ACTUALIZA ESTOS DATOS ANTES DE PUBLICAR.
- * Las claves deben coincidir EXACTAMENTE con la primera fila del Google Sheet.
- */
+'use strict';
 
-module.exports = {
-  'Representación de Estructuras Algebraicas': {
-    evento:      'REPRESENTACIÓN DE ESTRUCTURAS ALGEBRAICAS',
-    fechaInicio: '27 DE ENERO DE 2025',
-    fechaFin:    '31 DE ENERO DE 2025',
-    horas:       '20',
-    fechaCert:   '31 DE ENERO DE 2025',
-  },
-  'Biomat 2025': {
-    evento:      'BIOMAT 2025',
-    fechaInicio: '22 DE SEPTIEMBRE DE 2025',
-    fechaFin:    '26 DE SEPTIEMBRE DE 2025',
-    horas:       '20',
-    fechaCert:   '26 DE SEPTIEMBRE DE 2025',
-  },
-  'Congreso de Física y Tecnologías Emergentes': {
-    evento:      'CONGRESO DE FÍSICA Y TECNOLOGÍAS EMERGENTES',
-    fechaInicio: '13 DE OCTUBRE DE 2025',
-    fechaFin:    '17 DE OCTUBRE DE 2025',
-    horas:       '20',
-    fechaCert:   '17 DE OCTUBRE DE 2025',
-  },
-  'Encuentro de Matemáticas': {
-    evento:      'ENCUENTRO DE MATEMÁTICAS',
-    fechaInicio: '20 DE OCTUBRE DE 2025',
-    fechaFin:    '24 DE OCTUBRE DE 2025',
-    horas:       '20',
-    fechaCert:   '24 DE OCTUBRE DE 2025',
-  },
-  'Simposio Innobio': {
-    evento:      'SIMPOSIO INNOBIO',
-    fechaInicio: '15 DE OCTUBRE DE 2025',
-    fechaFin:    '17 DE OCTUBRE DE 2025',
-    horas:       '25',
-    fechaCert:   '17 DE OCTUBRE DE 2025',
-  },
-  'Workshop de Estadística': {
-    evento:      'WORKSHOP DE ESTADÍSTICA',
-    fechaInicio: '27 DE OCTUBRE DE 2025',
-    fechaFin:    '31 DE OCTUBRE DE 2025',
-    horas:       '20',
-    fechaCert:   '31 DE OCTUBRE DE 2025',
-  },
-  'Workshop en Ciencias de la Computación': {
-    evento:      'WORKSHOP EN CIENCIAS DE LA COMPUTACIÓN',
-    fechaInicio: '03 DE NOVIEMBRE DE 2025',
-    fechaFin:    '07 DE NOVIEMBRE DE 2025',
-    horas:       '20',
-    fechaCert:   '07 DE NOVIEMBRE DE 2025',
-  },
-};
+// ── URL de la pestaña "Eventos" publicada como CSV ──────────────────
+// Cambia el gid=XXXXXXX por el número real de tu pestaña
+const EVENTOS_CSV_URL =
+  'https://docs.google.com/spreadsheets/d/e/' +
+  '2PACX-1vTqE-3NMFdjG0TG_4LBVs65PUVo4SPHy0hK3IUa04Oe37NAu5Em_lQawdyCIMuAWw' +
+  '/pub?gid=730857601&output=csv';
+
+let cache = null;            // { eventoKey: { evento, fechaInicio, … } }
+let cacheTime = 0;
+const TTL_MS = 5 * 60 * 1000;  // refresca cada 5 minutos
+
+function parseEventosCSV(text) {
+  const rows = text
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n')
+    .map(r => r.split(',').map(c => c.trim()));
+
+  if (rows.length < 2) return {};
+
+  // Fila 0 → encabezados: eventoKey, evento, fechaInicio, fechaFin, horas, fechaCert
+  const headers = rows[0];
+  const result  = {};
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row[0]) continue;           // fila vacía
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = row[idx] || ''; });
+    result[obj.eventoKey] = obj;
+  }
+  return result;
+}
+
+async function getEventos() {
+  const now = Date.now();
+  if (cache && (now - cacheTime) < TTL_MS) return cache;
+
+  const resp = await fetch(EVENTOS_CSV_URL);
+  if (!resp.ok) throw new Error(`Error al cargar eventos: HTTP ${resp.status}`);
+  const text = await resp.text();
+  cache     = parseEventosCSV(text);
+  cacheTime = Date.now();
+  return cache;
+}
+
+module.exports = { getEventos };
