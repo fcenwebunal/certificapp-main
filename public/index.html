@@ -5,23 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Certificado Eventos UN</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* ── Fondo ── */
+    <style>
     .my-bg {
       background-image:
-        linear-gradient(rgba(0,0,0,0.78), rgba(0,0,0,0.5)),
+        linear-gradient(135deg, rgba(0,0,0,0.82) 0%, rgba(0,43,92,0.75) 100%),
         url('https://fcen.unal.edu.co/fileadmin/imagenes/fotos_paginas_programas/wpatio.jpg');
       background-size: cover;
       background-position: center;
     }
 
-    /* ── Spinner ── */
+    .card {
+      border-top: 4px solid #002B5C;
+    }
+
     .spinner {
       display: inline-block;
-      width: 1.1rem;
-      height: 1.1rem;
-      border: 2px solid rgba(255,255,255,0.4);
-      border-top-color: #fff;
+      width: 1.1rem; height: 1.1rem;
+      border: 2px solid rgba(0,43,92,0.25);
+      border-top-color: #002B5C;
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
       vertical-align: middle;
@@ -29,117 +30,117 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Shake para error ── */
     @keyframes shake {
       0%,100% { transform: translateX(0); }
       20%,60%  { transform: translateX(-6px); }
       40%,80%  { transform: translateX(6px); }
     }
     .shake { animation: shake 0.4s ease; }
+
+    select, input[type="text"] {
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    select:focus, input[type="text"]:focus {
+      border-color: #002B5C;
+      box-shadow: 0 0 0 3px rgba(0,43,92,0.15);
+      outline: none;
+    }
   </style>
 </head>
 
 <body class="my-bg min-h-screen flex items-center justify-center py-10">
 
-  <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-md">
+  <div class="bg-white card p-8 rounded-2xl shadow-2xl w-full max-w-md">
 
-    <!-- Logo FCEN -->
-    <div class="flex justify-center mb-6">
-      <img
-        src="https://fcen.unal.edu.co/fileadmin/Eventos/certificados/fcen.png"
-        alt="Facultad de Ciencias Exactas y Naturales"
-        class="w-80 h-20 object-contain"
-        onerror="this.style.display='none'"
-      />
-    </div>
-
-    <h1 class="text-2xl font-bold text-center text-gray-800 mb-1">Descargar Certificado</h1>
-    <p id="statusCarga" class="text-xs text-center text-gray-400 mb-5">Cargando lista de participantes…</p>
-
-    <!-- Selector de evento -->
-    <label for="eventoSelect" class="block text-sm font-medium text-gray-700 mb-1">
-      Selecciona el evento:
-    </label>
-    <select
-      id="eventoSelect"
-      disabled
-      class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2
-             focus:ring-blue-500 mb-4 disabled:bg-gray-100 disabled:cursor-not-allowed"
-    >
-      <option value="">— Cargando eventos… —</option>
-    </select>
-
-    <!-- Input cédula -->
-    <label for="cedulaInput" class="block text-sm font-medium text-gray-700 mb-1">
-      Número de documento:
-    </label>
-    <input
-      id="cedulaInput"
-      type="text"
-      placeholder="Ej: 1082693095"
-      class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2
-             focus:ring-blue-500 mb-4"
+  <!-- Logo FCEN -->
+  <div class="flex justify-center mb-7">
+    <img
+      src="https://fcen.unal.edu.co/fileadmin/Eventos/certificados/fcen.png"
+      alt="Facultad de Ciencias Exactas y Naturales"
+      class="w-72 h-16 object-contain"
+      onerror="this.style.display='none'"
     />
-
-    <!-- Botón buscar -->
-    <button
-      id="btnBuscar"
-      onclick="buscarCedula()"
-      class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800
-             text-white font-semibold py-2 rounded-md transition duration-200
-             disabled:opacity-60 disabled:cursor-not-allowed"
-    >
-      Buscar
-    </button>
-
-    <!-- ── Mensajes ── -->
-    <div id="msgDescarga" class="mt-5 hidden">
-      <p class="text-green-600 text-center font-medium mb-3">¡Gracias por tu participación!</p>
-      <div id="btnDescarga"
-        class="block text-center text-white bg-green-500 hover:bg-green-600
-               font-semibold p-4 border rounded-md transition duration-200 cursor-pointer"
-        onclick="descargar()"
-      >
-        🔽 DESCARGAR CERTIFICADO
-      </div>
-    </div>
-
-    <div id="msgGenerando" class="mt-5 hidden text-center text-blue-600 font-medium">
-      <span class="spinner"></span>Generando certificado…
-    </div>
-
-    <div id="msgNoEncontrado" class="mt-5 hidden">
-      <p class="text-red-600 text-center font-medium">
-        No se encontró registro con ese número de documento en el evento seleccionado.
-      </p>
-    </div>
-
-    <div id="msgSinEvento" class="mt-5 hidden">
-      <p class="text-yellow-600 text-center font-medium">
-        Por favor selecciona un evento antes de buscar.
-      </p>
-    </div>
-
-    <div id="msgError" class="mt-5 hidden">
-      <p class="text-red-700 text-center font-medium">
-        Ocurrió un error al generar el certificado. Intenta de nuevo.
-      </p>
-    </div>
-
-    <div class="mt-6 text-center">
-      <small class="text-gray-400 leading-tight">
-        ¿Problemas para descargar?
-        <strong>comunicacionesfcen_man@unal.edu.co</strong>
-      </small>
-    </div>
   </div>
+
+  <h1 class="text-xl font-bold text-center text-gray-800 mb-1 tracking-tight">
+    Descarga tu Certificado
+  </h1>  
+
+  <!-- Selector de evento -->
+  <label for="eventoSelect" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+    Evento
+  </label>
+  <select
+    id="eventoSelect"
+    disabled
+    class="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50
+           text-sm text-gray-700 mb-4 disabled:cursor-not-allowed"
+  >
+    <option value="">— Cargando eventos… —</option>
+  </select>
+
+  <!-- Input cédula -->
+  <label for="cedulaInput" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+    Número de documento
+  </label>
+  <input
+    id="cedulaInput"
+    type="text"
+    placeholder="1004321987"
+    class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 mb-5"
+  />
+
+  <!-- Botón buscar -->
+  <button
+    id="btnBuscar"
+    onclick="buscarCedula()"
+    class="w-full bg-[#002B5C] hover:bg-[#003f85] active:bg-[#001f42]
+           text-white text-sm font-semibold py-2.5 rounded-lg transition duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    Buscar y descargar
+  </button>
+
+  <!-- Mensajes -->
+  <div id="msgGenerando" class="mt-5 hidden text-center text-[#002B5C] text-sm font-medium">
+    <span class="spinner"></span>Generando certificado…
+  </div>
+
+  <div id="msgNoEncontrado" class="mt-5 hidden">
+    <p class="text-red-500 text-center text-sm font-medium bg-red-50 border border-red-200 rounded-lg p-3">
+      No se encontró registro con ese documento en el evento seleccionado.
+    </p>
+  </div>
+
+  <div id="msgSinEvento" class="mt-5 hidden">
+    <p class="text-amber-600 text-center text-sm font-medium bg-amber-50 border border-amber-200 rounded-lg p-3">
+      Por favor selecciona un evento antes de buscar.
+    </p>
+  </div>
+
+  <div id="msgError" class="mt-5 hidden">
+    <p class="text-red-600 text-center text-sm font-medium bg-red-50 border border-red-200 rounded-lg p-3">
+      Ocurrió un error al generar el certificado. Intenta de nuevo.
+    </p>
+  </div>
+
+  <div class="mt-7 text-center">
+    <small class="text-gray-400 text-xs">
+      ¿Problemas? 
+      <a href="mailto:comunicacionesfcen_man@unal.edu.co"
+        class="text-gray-500 font-medium hover:text-[#002B5C] underline transition duration-200">
+        comunicacionesfcen_man@unal.edu.co
+      </a>
+    </small>
+  </div>
+</div>
 
   <!-- ══════════════════════════════════════════════════════════════════
        LÓGICA PRINCIPAL
   ══════════════════════════════════════════════════════════════════ -->
   <script>
     // ── URL del Google Sheet publicado como CSV ──────────────────────
-    const SHEET_URL =
+    const SHEET_URL = 
       'https://docs.google.com/spreadsheets/d/e/2PACX-1vTqE-3NMFdjG0TG_4LBVs65PUVo4SPHy0hK3IUa04Oe37NAu5Em_lQawdyCIMuAWw/pub?output=csv';
 
     // ── Base de datos en memoria: { 'Nombre Evento': [{nombre,documento,rol}] }
@@ -149,13 +150,6 @@
     let participanteActual = null;
     let eventoActual       = null;
 
-    // ────────────────────────────────────────────────────────────────
-    // Parseo del CSV
-    // Estructura:
-    //   Fila 0  → nombres de evento (cols 0, 3, 6, …)
-    //   Fila 1  → cabeceras (nombre, documento, rol, …)
-    //   Fila 2+ → participantes
-    // ────────────────────────────────────────────────────────────────
     function parseCSV(text) {
       // Normalizar saltos de línea y separar filas
       const rows = text
@@ -203,8 +197,7 @@
     // ────────────────────────────────────────────────────────────────
     // Carga inicial
     // ────────────────────────────────────────────────────────────────
-    async function cargarDatos() {
-      const statusEl = document.getElementById('statusCarga');
+    async function cargarDatos() {      
       const select   = document.getElementById('eventoSelect');
 
       try {
@@ -222,14 +215,10 @@
           select.appendChild(opt);
         }
 
-        select.disabled        = false;
-        statusEl.textContent   = `${Object.keys(db).length} eventos cargados ✓`;
-        statusEl.className     = 'text-xs text-center text-green-500 mb-5';
+        select.disabled        = false;        
       } catch (err) {
         console.error(err);
         select.innerHTML     = '<option value="">Error al cargar eventos</option>';
-        statusEl.textContent = 'No se pudo cargar la lista. Recarga la página.';
-        statusEl.className   = 'text-xs text-center text-red-500 mb-5';
       }
     }
 
@@ -237,7 +226,7 @@
     // Búsqueda
     // ────────────────────────────────────────────────────────────────
     function ocultarMensajes() {
-      ['msgDescarga','msgGenerando','msgNoEncontrado','msgSinEvento','msgError']
+      ['msgGenerando','msgNoEncontrado','msgSinEvento','msgError']
         .forEach(id => document.getElementById(id).classList.add('hidden'));
     }
 
@@ -256,13 +245,13 @@
       if (!evento) { mostrar('msgSinEvento'); return; }
       if (!cedula) {
         const input = document.getElementById('cedulaInput');
-        input.classList.add('border-red-500', 'shake');
+        input.classList.add('border-red-400', 'shake');
         setTimeout(() => input.classList.remove('shake'), 500);
         return;
       }
 
-      const lista       = db[evento] || [];
-      const normalizado = normDoc(cedula);
+      const lista        = db[evento] || [];
+      const normalizado  = normDoc(cedula);
       const participante = lista.find(p => normDoc(p.documento) === normalizado);
 
       if (!participante) {
@@ -270,10 +259,9 @@
         return;
       }
 
-      // Guardamos para la descarga
       participanteActual = participante;
       eventoActual       = evento;
-      mostrar('msgDescarga');
+      descargar();          // ← descarga automática directa
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -315,8 +303,7 @@
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 10_000);
 
-        ocultarMensajes();
-        mostrar('msgDescarga');   // volver a mostrar el botón
+        ocultarMensajes();   // limpia el spinner, queda todo listo para otra búsqueda
       } catch (err) {
         console.error(err);
         ocultarMensajes();
