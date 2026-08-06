@@ -184,12 +184,14 @@
       participanteActual = null;
       eventoActual       = null;
 
+      const input  = document.getElementById('cedulaInput');
       const evento = document.getElementById('eventoSelect').value;
-      const cedula = document.getElementById('cedulaInput').value.trim();
+      const cedula = input.value.trim();
+
+      input.classList.remove('is-invalid');
 
       if (!evento) { mostrar('msgSinEvento'); return; }
       if (!cedula) {
-        const input = document.getElementById('cedulaInput');
         input.classList.add('is-invalid', 'shake');
         setTimeout(() => input.classList.remove('shake'), 500);
         return;
