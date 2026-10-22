@@ -2,8 +2,8 @@
 
 const EVENTOS_CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/' +
-  '2PACX-1vTqE-3NMFdjG0TG_4LBVs65PUVo4SPHy0hK3IUa04Oe37NAu5Em_lQawdyCIMuAWw' +
-  '/pub?gid=730857601&output=csv';
+  '2PACX-1vQaw34NyGZJdnMGDK31dVxYzRR44Fve-QX6X18Nl6IJPk_krB58D0v7dMdwW6HDLWDQxw4GFmF0yfjt' +
+  '/pub?gid=2018966166&single=true&output=csv';
 
 let cache = null;            // { eventoKey: { evento, fechaInicio, … } }
 let cacheTime = 0;
