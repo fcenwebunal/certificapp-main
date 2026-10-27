@@ -118,17 +118,18 @@
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQaw34NyGZJdnMGDK31dVxYzRR44Fve-QX6X18Nl6IJPk_krB58D0v7dMdwW6HDLWDQxw4GFmF0yfjt/pub?output=csv';
     const EVENTS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQaw34NyGZJdnMGDK31dVxYzRR44Fve-QX6X18Nl6IJPk_krB58D0v7dMdwW6HDLWDQxw4GFmF0yfjt/pub?gid=2018966166&single=true&output=csv';
 
-    // Keys are eventoKey (row 1 of `datos`) without accents and in lowercase.
+    // Keys are eventoKey (row 1 of `datos`) without accents and in lowercase. Each logo is cut from the
+    // event's own site and sits on the background color of that site, since several of them are white.
     const EVENT_ICONS = {
-      'representacion de estructuras algebraicas': 'iconos/real-2025.svg',
-      'biomat 2025': 'iconos/biomat-2025.png',
-      'congreso de fisica y tecnologias emergentes': 'iconos/cifte-2025.png',
-      'encuentro de matematicas 2025': 'iconos/encuentro-matematicas-2025.png',
-      'simposio innobio': 'iconos/innobio-2025.svg',
-      'workshop de estadistica': 'iconos/workshop-estadistica-2025.svg',
-      'workshop en ciencias de la computacion': 'iconos/workshop-computacion-2025.png',
+      'representacion de estructuras algebraicas': { src: 'iconos/real-2025.png', bg: '#000612' },
+      'biomat 2025': { src: 'iconos/biomat-2025.png', bg: '#7e9c24' },
+      'congreso de fisica y tecnologias emergentes': { src: 'iconos/cifte-2025.png', bg: '#2a6c66' },
+      'encuentro de matematicas 2025': { src: 'iconos/encuentro-matematicas-2025.png' },
+      'simposio innobio': { src: 'iconos/innobio-2025.png', bg: '#000612' },
+      'workshop de estadistica': { src: 'iconos/workshop-estadistica-2025.png', bg: '#121e3c' },
+      'workshop en ciencias de la computacion': { src: 'iconos/workshop-computacion-2025.png' },
     };
-    const DEFAULT_ICON = 'iconos/evento.svg';
+    const DEFAULT_ICON = { src: 'iconos/evento.png', bg: '#0B2E59' };
 
     const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
       'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -278,11 +279,13 @@
       const icon = document.createElement('span');
       icon.className = 'event-icon';
       const img = document.createElement('img');
-      img.src = ev.icon;
+      const paint = logo => {
+        img.src = logo.src;
+        icon.style.backgroundColor = logo.bg || '';
+      };
+      paint(ev.icon);
       img.alt = '';
-      img.width = 34;
-      img.height = 34;
-      img.onerror = () => { img.onerror = null; img.src = DEFAULT_ICON; };
+      img.onerror = () => { img.onerror = null; paint(DEFAULT_ICON); };
       icon.appendChild(img);
 
       const text = document.createElement('span');
