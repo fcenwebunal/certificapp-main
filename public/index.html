@@ -3,83 +3,112 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Certificado Eventos UN</title>
+  <title>Certificados de eventos FCEN</title>
   <link rel="stylesheet" href="styles.css" />
+  <script>
+    if (window.self !== window.top) document.documentElement.classList.add('is-embedded');
+  </script>
 </head>
 
 <body>
 
-  <div class="card">
+  <main class="cert">
 
-  <!-- Logo FCEN -->
-  <div class="logo">
-    <img
-      src="https://fcen.unal.edu.co/fileadmin/Eventos/certificados/fcen.png"
-      alt="Facultad de Ciencias Exactas y Naturales"
-      onerror="this.style.display='none'"
+    <h1 class="cert-title">Descarga tu certificado</h1>
+
+    <!-- Selector de evento -->
+    <span id="eventoLabel" class="field-label">Evento</span>
+    <div class="picker">
+      <div
+        id="eventoTrigger"
+        class="picker-trigger"
+        role="combobox"
+        tabindex="-1"
+        aria-labelledby="eventoLabel"
+        aria-haspopup="listbox"
+        aria-controls="eventoList"
+        aria-expanded="false"
+        aria-disabled="true"
+      >
+        <span id="eventoValue" class="picker-value">
+          <span class="picker-placeholder">Cargando eventos…</span>
+        </span>
+        <svg class="picker-chevron" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
+      <ul id="eventoList" class="picker-list" role="listbox" aria-labelledby="eventoLabel" hidden></ul>
+    </div>
+
+    <!-- Input cédula -->
+    <label for="cedulaInput" class="field-label">
+      Número de documento
+    </label>
+    <input
+      id="cedulaInput"
+      type="text"
+      class="field"
+      placeholder="Ej.: 1004321987"
+      autocomplete="off"
     />
-  </div>
 
-  <h1 class="title">
-    Descarga tu Certificado
-  </h1>
+    <div class="actions">
+      <button id="btnBuscar" class="button" onclick="buscarCedula()">
+        Buscar y descargar
+      </button>
+      <button
+        id="btnAyuda"
+        type="button"
+        class="help-toggle"
+        aria-expanded="false"
+        aria-controls="ayuda"
+        aria-label="Ayuda"
+        title="Ayuda"
+      >?</button>
+    </div>
 
-  <!-- Selector de evento -->
-  <label for="eventoSelect" class="field-label">
-    Evento
-  </label>
-  <select id="eventoSelect" class="field" disabled>
-    <option value="">— Cargando eventos… —</option>
-  </select>
+    <!-- Mensajes -->
+    <div id="msgGenerando" class="message message--loading hidden">
+      <span class="spinner"></span>Generando certificado…
+    </div>
 
-  <!-- Input cédula -->
-  <label for="cedulaInput" class="field-label">
-    Número de documento
-  </label>
-  <input
-    id="cedulaInput"
-    type="text"
-    class="field"
-    placeholder="1004321987"
-  />
+    <div id="msgNoEncontrado" class="message hidden">
+      <p class="alert alert--error">
+        No se encontró registro con ese documento en el evento seleccionado.
+      </p>
+    </div>
 
-  <!-- Botón buscar -->
-  <button id="btnBuscar" class="button" onclick="buscarCedula()">
-    Buscar y descargar
-  </button>
+    <div id="msgSinEvento" class="message hidden">
+      <p class="alert alert--warning">
+        Por favor selecciona un evento antes de buscar.
+      </p>
+    </div>
 
-  <!-- Mensajes -->
-  <div id="msgGenerando" class="message message--loading hidden">
-    <span class="spinner"></span>Generando certificado…
-  </div>
+    <div id="msgError" class="message hidden">
+      <p class="alert alert--error">
+        Ocurrió un error al generar el certificado. Intenta de nuevo.
+      </p>
+    </div>
 
-  <div id="msgNoEncontrado" class="message hidden">
-    <p class="alert alert--error">
-      No se encontró registro con ese documento en el evento seleccionado.
-    </p>
-  </div>
+    <div id="msgCarga" class="message hidden">
+      <p class="alert alert--error">
+        No se pudieron cargar los eventos. Recarga la página para intentarlo de nuevo.
+      </p>
+    </div>
 
-  <div id="msgSinEvento" class="message hidden">
-    <p class="alert alert--warning">
-      Por favor selecciona un evento antes de buscar.
-    </p>
-  </div>
+    <section id="ayuda" class="help" aria-label="Ayuda" hidden>
+      <ol class="help-steps">
+        <li>Elige el evento al que asististe.</li>
+        <li>Escribe tu número de documento, sin puntos ni espacios.</li>
+        <li>Presiona <strong>Buscar y descargar</strong> y el certificado se descarga en PDF.</li>
+      </ol>
+      <p class="help-contact">
+        ¿No aparece tu certificado o tiene un dato errado? Escríbenos a
+        <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=comunicacionesfcen_man@unal.edu.co" target="_blank" rel="noopener">comunicacionesfcen_man@unal.edu.co</a>
+      </p>
+    </section>
 
-  <div id="msgError" class="message hidden">
-    <p class="alert alert--error">
-      Ocurrió un error al generar el certificado. Intenta de nuevo.
-    </p>
-  </div>
-
-  <div class="footer">
-    <small>
-      ¿Problemas?
-      <a href="mailto:comunicacionesfcen_man@unal.edu.co">
-        comunicacionesfcen_man@unal.edu.co
-      </a>
-    </small>
-  </div>
-</div>
+  </main>
 
   <!-- ══════════════════════════════════════════════════════════════════
        LÓGICA PRINCIPAL
@@ -87,6 +116,22 @@
   <script>
     // ── URL del Google Sheet publicado como CSV ──────────────────────
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQaw34NyGZJdnMGDK31dVxYzRR44Fve-QX6X18Nl6IJPk_krB58D0v7dMdwW6HDLWDQxw4GFmF0yfjt/pub?output=csv';
+    const EVENTS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQaw34NyGZJdnMGDK31dVxYzRR44Fve-QX6X18Nl6IJPk_krB58D0v7dMdwW6HDLWDQxw4GFmF0yfjt/pub?gid=2018966166&single=true&output=csv';
+
+    // Keys are eventoKey (row 1 of `datos`) without accents and in lowercase.
+    const EVENT_ICONS = {
+      'representacion de estructuras algebraicas': 'iconos/real-2025.svg',
+      'biomat 2025': 'iconos/biomat-2025.png',
+      'congreso de fisica y tecnologias emergentes': 'iconos/cifte-2025.png',
+      'encuentro de matematicas 2025': 'iconos/encuentro-matematicas-2025.png',
+      'simposio innobio': 'iconos/innobio-2025.svg',
+      'workshop de estadistica': 'iconos/workshop-estadistica-2025.svg',
+      'workshop en ciencias de la computacion': 'iconos/workshop-computacion-2025.png',
+    };
+    const DEFAULT_ICON = 'iconos/evento.svg';
+
+    const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+      'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
     // ── Base de datos en memoria: { 'Nombre Evento': [{nombre,documento,rol}] }
     let db = {};
@@ -134,36 +179,310 @@
       return result;
     }
 
-    // ── Normalización de documento (quita "CC " al inicio, espacios)
-    function normDoc(d) {
-      return (d || '').replace(/^CC\s*/i, '').replace(/\s/g, '').toLowerCase();
+    // The `eventos` tab may hold quoted cells with commas, so it is parsed character by character.
+    function parseQuotedCSV(text) {
+      const rows = [];
+      let row = [];
+      let cell = '';
+      let quoted = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (quoted) {
+          if (ch === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+          else if (ch === '"') quoted = false;
+          else cell += ch;
+        } else if (ch === '"') {
+          quoted = true;
+        } else if (ch === ',') {
+          row.push(cell); cell = '';
+        } else if (ch === '\n' || ch === '\r') {
+          if (ch === '\r' && text[i + 1] === '\n') i++;
+          row.push(cell); rows.push(row);
+          row = []; cell = '';
+        } else {
+          cell += ch;
+        }
+      }
+      if (cell || row.length) { row.push(cell); rows.push(row); }
+      return rows;
     }
+
+    function normKey(text) {
+      return (text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+    }
+
+    // "DEL 27 AL 31 DE ENERO DE 2025" → { label: 'Enero de 2025', order: 20250127 }
+    function eventMonth(fecha) {
+      const text  = normKey(fecha);
+      const month = text.match(new RegExp('\\b(' + MONTHS.join('|') + ')\\b'));
+      if (!month) return null;
+      const year = text.slice(month.index).match(/\b(\d{4})\b/);
+      if (!year) return null;
+      const day = text.match(/\b(\d{1,2})\b/);
+      const index = MONTHS.indexOf(month[1]);
+      return {
+        label: month[1][0].toUpperCase() + month[1].slice(1) + ' de ' + year[1],
+        order: Number(year[1]) * 10000 + (index + 1) * 100 + (day ? Number(day[1]) : 0),
+      };
+    }
+
+    async function cargarMetadatos() {
+      try {
+        const resp = await fetch(EVENTS_URL);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const [headers, ...rows] = parseQuotedCSV(await resp.text());
+        const col = name => headers.findIndex(h => h.trim() === name);
+        const keyCol = col('eventoKey');
+        const nameCol = col('evento');
+        const dateCol = col('fecha');
+        const certCol = col('fechaCert');
+        const meta = {};
+        for (const row of rows) {
+          const key = (row[keyCol] || '').trim();
+          if (!key) continue;
+          meta[normKey(key)] = {
+            name: (row[nameCol] || '').trim(),
+            month: eventMonth(row[dateCol]) || eventMonth(row[certCol]),
+          };
+        }
+        return meta;
+      } catch (err) {
+        console.warn('No se pudieron leer los datos de los eventos', err);
+        return {};
+      }
+    }
+
+    // ── Normalización de documento (quita "CC " al inicio, espacios y puntos)
+    function normDoc(d) {
+      return (d || '').replace(/^CC\s*/i, '').replace(/[\s.]/g, '').toLowerCase();
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Selector de evento (combobox de solo selección, patrón WAI-ARIA)
+    // ────────────────────────────────────────────────────────────────
+    const picker = {
+      trigger: document.getElementById('eventoTrigger'),
+      value:   document.getElementById('eventoValue'),
+      list:    document.getElementById('eventoList'),
+      events:  [],
+      active:  -1,
+      selected: -1,
+      typed:   '',
+      typedAt: 0,
+    };
+
+    function eventBlock(ev) {
+      const block = document.createDocumentFragment();
+
+      const icon = document.createElement('span');
+      icon.className = 'event-icon';
+      const img = document.createElement('img');
+      img.src = ev.icon;
+      img.alt = '';
+      img.width = 34;
+      img.height = 34;
+      img.onerror = () => { img.onerror = null; img.src = DEFAULT_ICON; };
+      icon.appendChild(img);
+
+      const text = document.createElement('span');
+      text.className = 'event-text';
+      const name = document.createElement('span');
+      name.className = 'event-name';
+      name.textContent = ev.label;
+      text.appendChild(name);
+      if (ev.month) {
+        const date = document.createElement('span');
+        date.className = 'event-date';
+        date.textContent = ev.month.label;
+        text.appendChild(date);
+      }
+
+      block.append(icon, text);
+      return block;
+    }
+
+    function renderOptions() {
+      picker.list.textContent = '';
+      picker.events.forEach((ev, i) => {
+        const li = document.createElement('li');
+        li.id = 'evento-opcion-' + i;
+        li.className = 'picker-option';
+        li.setAttribute('role', 'option');
+        li.setAttribute('aria-selected', 'false');
+        li.appendChild(eventBlock(ev));
+        li.addEventListener('click', () => selectEvent(i));
+        li.addEventListener('mousemove', () => { if (picker.active !== i) setActive(i, false); });
+        picker.list.appendChild(li);
+      });
+    }
+
+    function setPlaceholder(text) {
+      picker.value.textContent = '';
+      const span = document.createElement('span');
+      span.className = 'picker-placeholder';
+      span.textContent = text;
+      picker.value.appendChild(span);
+    }
+
+    function enablePicker() {
+      picker.trigger.removeAttribute('aria-disabled');
+      picker.trigger.tabIndex = 0;
+      setPlaceholder('Selecciona el evento');
+    }
+
+    function isOpen() {
+      return !picker.list.hidden;
+    }
+
+    // The list lives inside the iframe: it opens upward when there is more room above, and scrolls inside.
+    function fitList() {
+      const rect  = picker.trigger.getBoundingClientRect();
+      const gap   = 12;
+      const below = window.innerHeight - rect.bottom - gap;
+      const above = rect.top - gap;
+      const up    = below < 260 && above > below;
+      picker.list.classList.toggle('is-up', up);
+      picker.list.style.maxHeight = Math.max(160, up ? above : below) + 'px';
+    }
+
+    function openList() {
+      if (isOpen() || picker.trigger.hasAttribute('aria-disabled')) return;
+      picker.list.hidden = false;
+      picker.trigger.setAttribute('aria-expanded', 'true');
+      fitList();
+      setActive(picker.selected >= 0 ? picker.selected : 0);
+    }
+
+    function closeList() {
+      if (!isOpen()) return;
+      picker.list.hidden = true;
+      picker.trigger.setAttribute('aria-expanded', 'false');
+      picker.trigger.removeAttribute('aria-activedescendant');
+    }
+
+    function setActive(i, scroll = true) {
+      const options = picker.list.children;
+      if (!options.length) return;
+      i = Math.max(0, Math.min(options.length - 1, i));
+      if (options[picker.active]) options[picker.active].classList.remove('is-active');
+      picker.active = i;
+      options[i].classList.add('is-active');
+      picker.trigger.setAttribute('aria-activedescendant', options[i].id);
+      if (scroll) options[i].scrollIntoView({ block: 'nearest' });
+    }
+
+    function selectEvent(i) {
+      const options = picker.list.children;
+      if (options[picker.selected]) options[picker.selected].setAttribute('aria-selected', 'false');
+      picker.selected = i;
+      options[i].setAttribute('aria-selected', 'true');
+
+      picker.value.textContent = '';
+      picker.value.appendChild(eventBlock(picker.events[i]));
+      picker.trigger.classList.remove('is-invalid');
+      document.getElementById('msgSinEvento').classList.add('hidden');
+      closeList();
+
+      const input = document.getElementById('cedulaInput');
+      if (input.value.trim()) picker.trigger.focus();
+      else input.focus();
+    }
+
+    function typeAhead(char) {
+      const now = Date.now();
+      picker.typed = (now - picker.typedAt > 700 ? '' : picker.typed) + normKey(char);
+      picker.typedAt = now;
+      const start = picker.typed.length === 1 ? picker.active + 1 : picker.active;
+      const n = picker.events.length;
+      for (let k = 0; k < n; k++) {
+        const i = (start + k) % n;
+        if (normKey(picker.events[i].label).startsWith(picker.typed)) {
+          setActive(i);
+          return;
+        }
+      }
+    }
+
+    picker.trigger.addEventListener('click', () => (isOpen() ? closeList() : openList()));
+
+    picker.trigger.addEventListener('keydown', e => {
+      const open = isOpen();
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          if (!open) openList();
+          else setActive(picker.active + 1);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          if (!open) openList();
+          else setActive(picker.active - 1);
+          break;
+        case 'Home':
+        case 'End':
+          e.preventDefault();
+          openList();
+          setActive(e.key === 'Home' ? 0 : picker.events.length - 1);
+          break;
+        case 'Enter':
+        case ' ':
+          e.preventDefault();
+          if (open) selectEvent(picker.active);
+          else openList();
+          break;
+        case 'Escape':
+          if (open) { e.preventDefault(); closeList(); }
+          break;
+        case 'Tab':
+          closeList();
+          break;
+        default:
+          if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            openList();
+            typeAhead(e.key);
+          }
+      }
+    });
+
+    picker.list.addEventListener('mousedown', e => e.preventDefault());
+
+    document.addEventListener('pointerdown', e => {
+      if (!e.target.closest('.picker')) closeList();
+    });
+
+    window.addEventListener('resize', () => { if (isOpen()) fitList(); });
 
     // ────────────────────────────────────────────────────────────────
     // Carga inicial
     // ────────────────────────────────────────────────────────────────
-    async function cargarDatos() {      
-      const select   = document.getElementById('eventoSelect');
-
+    async function cargarDatos() {
       try {
-        const resp = await fetch(SHEET_URL);
+        const [resp, meta] = await Promise.all([fetch(SHEET_URL), cargarMetadatos()]);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const text = await resp.text();
         db = parseCSV(text);
 
-        // Poblar selector
-        select.innerHTML = '<option value="">— Selecciona un evento —</option>';
-        for (const nombre of Object.keys(db)) {
-          const opt = document.createElement('option');
-          opt.value       = nombre;
-          opt.textContent = nombre;
-          select.appendChild(opt);
-        }
+        picker.events = Object.keys(db).map((key, i) => {
+          const info = meta[normKey(key)] || {};
+          return {
+            key,
+            label: info.name || key,
+            month: info.month || null,
+            icon:  EVENT_ICONS[normKey(key)] || DEFAULT_ICON,
+            index: i,
+          };
+        });
+        // Most recent first; events without a date keep the sheet order at the end.
+        picker.events.sort((a, b) =>
+          (b.month ? b.month.order : -1) - (a.month ? a.month.order : -1) || a.index - b.index);
 
-        select.disabled        = false;        
+        renderOptions();
+        enablePicker();
       } catch (err) {
         console.error(err);
-        select.innerHTML     = '<option value="">Error al cargar eventos</option>';
+        setPlaceholder('No se pudieron cargar los eventos');
+        mostrar('msgCarga');
       }
     }
 
@@ -185,15 +504,21 @@
       eventoActual       = null;
 
       const input  = document.getElementById('cedulaInput');
-      const evento = document.getElementById('eventoSelect').value;
+      const evento = picker.selected >= 0 ? picker.events[picker.selected].key : '';
       const cedula = input.value.trim();
 
       input.classList.remove('is-invalid');
 
-      if (!evento) { mostrar('msgSinEvento'); return; }
+      if (!evento) {
+        mostrar('msgSinEvento');
+        picker.trigger.classList.add('is-invalid');
+        picker.trigger.focus();
+        return;
+      }
       if (!cedula) {
         input.classList.add('is-invalid', 'shake');
         setTimeout(() => input.classList.remove('shake'), 500);
+        input.focus();
         return;
       }
 
@@ -260,11 +585,34 @@
       }
     }
 
+    // ── Ayuda ────────────────────────────────────────────────────────
+    function alternarAyuda() {
+      const btn   = document.getElementById('btnAyuda');
+      const panel = document.getElementById('ayuda');
+      const open  = panel.hidden;
+      panel.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+    }
+
+    // Inside the TYPO3 page the iframe grows to this height, so the help panel never adds an inner scrollbar.
+    function reportHeight() {
+      if (window.self === window.top || !('ResizeObserver' in window)) return;
+      const main = document.querySelector('.cert');
+      new ResizeObserver(() => {
+        const style  = getComputedStyle(document.body);
+        const height = main.getBoundingClientRect().height
+          + parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+        window.parent.postMessage({ type: 'fcen-certificados:altura', height: Math.ceil(height) }, '*');
+      }).observe(main);
+    }
+
     // ── Permitir búsqueda con Enter ──────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
       cargarDatos();
+      reportHeight();
       document.getElementById('cedulaInput')
         .addEventListener('keydown', e => { if (e.key === 'Enter') buscarCedula(); });
+      document.getElementById('btnAyuda').addEventListener('click', alternarAyuda);
     });
   </script>
 </body>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <marker id="h" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M0 1 10 5 0 9z" fill="#001038"/>
+    </marker>
+  </defs>
+  <g fill="none" stroke="#001038" stroke-width="3" stroke-linecap="round" marker-end="url(#h)">
+    <path d="M27.6 21.9 17.1 40.8"/>
+    <path d="M21 50h21.5"/>
+    <path d="M47.6 42.1 37.1 23.2"/>
+  </g>
+  <g fill="#1860F8">
+    <circle cx="32" cy="14" r="6.5"/>
+    <circle cx="12" cy="50" r="6.5"/>
+    <circle cx="52" cy="50" r="6.5"/>
+  </g>
+</svg>
