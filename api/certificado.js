@@ -1,7 +1,15 @@
 'use strict';
 
-const { generarCertificado } = require('../generate');
-const { getEventos }         = require('../config/eventos');
+const { generarCertificado }        = require('../generate');
+const { generateHermesCertificate } = require('../generate-hermes');
+const { getEventos }                = require('../config/eventos');
+const { findHermesParticipant }     = require('../config/hermes');
+
+const safeFileName = nombre => nombre
+  .normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .replace(/[^a-zA-Z0-9 ]/g, '')
+  .trim()
+  .replace(/\s+/g, '_');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -11,7 +19,7 @@ module.exports = async (req, res) => {
   try {
     const { nombre, cedula, rol, eventoKey } = req.body || {};
 
-    if (!nombre || !cedula || !eventoKey) {
+    if (!cedula || !eventoKey) {
       return res.status(400).json({ error: 'Faltan datos del participante' });
     }
 
@@ -22,25 +30,39 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: `Evento desconocido: ${eventoKey}` });
     }
 
-    const buffer = await generarCertificado({
-      nombre,
-      cedula,
-      rol:         (rol || 'ASISTENTE').toUpperCase(),
-      evento:      meta.evento,
-      fecha:       meta.fecha,
-      horas:       meta.horas,
-      fechaCert:   meta.fechaCert,
-    });
+    let buffer;
+    let fileName;
 
-    const safeName = nombre
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z0-9 ]/g, '')
-      .trim()
-      .replace(/\s+/g, '_');
+    // Hermes certificates carry a security code, so they are built only from the stored row.
+    if (meta.formato === 'hermes') {
+      const participant = await findHermesParticipant(eventoKey, cedula);
+      if (!participant) {
+        return res.status(404).json({ error: 'No se encontró registro con ese documento' });
+      }
+      if (!participant.activo) {
+        return res.status(403).json({ error: 'Certificado no habilitado', inactivo: true });
+      }
+      buffer   = await generateHermesCertificate({ ...meta, ...participant });
+      fileName = participant.nombre;
+    } else {
+      if (!nombre) {
+        return res.status(400).json({ error: 'Faltan datos del participante' });
+      }
+      buffer = await generarCertificado({
+        nombre,
+        cedula,
+        rol:         (rol || 'ASISTENTE').toUpperCase(),
+        evento:      meta.evento,
+        fecha:       meta.fecha,
+        horas:       meta.horas,
+        fechaCert:   meta.fechaCert,
+      });
+      fileName = nombre;
+    }
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition',
-      `attachment; filename="certificado_${safeName}.pdf"`);
+      `attachment; filename="certificado_${safeFileName(fileName)}.pdf"`);
     res.setHeader('Content-Length', buffer.length);
     res.setHeader('Cache-Control', 'no-store');
     res.send(buffer);

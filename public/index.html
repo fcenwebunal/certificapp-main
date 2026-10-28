@@ -78,6 +78,13 @@
       </p>
     </div>
 
+    <div id="msgInactivo" class="message hidden">
+      <p class="alert alert--warning">
+        Tu certificado no está habilitado porque no se registró tu asistencia. Si asististe, escríbenos a
+        <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=comunicacionesfcen_man@unal.edu.co" target="_blank" rel="noopener">comunicacionesfcen_man@unal.edu.co</a>
+      </p>
+    </div>
+
     <div id="msgSinEvento" class="message hidden">
       <p class="alert alert--warning">
         Por favor selecciona un evento antes de buscar.
@@ -117,6 +124,8 @@
     // ── URL del Google Sheet publicado como CSV ──────────────────────
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQaw34NyGZJdnMGDK31dVxYzRR44Fve-QX6X18Nl6IJPk_krB58D0v7dMdwW6HDLWDQxw4GFmF0yfjt/pub?output=csv';
     const EVENTS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQaw34NyGZJdnMGDK31dVxYzRR44Fve-QX6X18Nl6IJPk_krB58D0v7dMdwW6HDLWDQxw4GFmF0yfjt/pub?gid=2018966166&single=true&output=csv';
+    // `datos_hermes`: one row per certificate of the events that copy the Hermes format.
+    const HERMES_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQaw34NyGZJdnMGDK31dVxYzRR44Fve-QX6X18Nl6IJPk_krB58D0v7dMdwW6HDLWDQxw4GFmF0yfjt/pub?gid=604129353&single=true&output=csv';
 
     // Keys are eventoKey (row 1 of `datos`) without accents and in lowercase. Each logo is cut from the
     // event's own site and sits on the background color of that site, since several of them are white.
@@ -128,6 +137,7 @@
       'simposio innobio': { src: 'iconos/innobio-2025.png', bg: '#000612' },
       'workshop de estadistica': { src: 'iconos/workshop-estadistica-2025.png', bg: '#121e3c' },
       'workshop en ciencias de la computacion': { src: 'iconos/workshop-computacion-2025.png' },
+      'congreso internacional de materiales 2026': { src: 'iconos/cim-2026.png', bg: '#0d1b3e' },
     };
     const DEFAULT_ICON = { src: 'iconos/evento.png', bg: '#0B2E59' };
 
@@ -207,6 +217,31 @@
       }
       if (cell || row.length) { row.push(cell); rows.push(row); }
       return rows;
+    }
+
+    // Adds the `datos_hermes` rows to the in-memory database, grouped by their `evento` column.
+    async function cargarHermes() {
+      try {
+        const resp = await fetch(HERMES_URL);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const [headers, ...rows] = parseQuotedCSV(await resp.text());
+        const col = name => headers.findIndex(h => h.trim() === name);
+        const [eventCol, nameCol, docCol, activeCol] = ['evento', 'nombre', 'documento', 'activo'].map(col);
+        const result = {};
+        for (const row of rows) {
+          const evento = (row[eventCol] || '').trim();
+          if (!evento || !(row[nameCol] || '').trim()) continue;
+          (result[evento] = result[evento] || []).push({
+            nombre:    row[nameCol],
+            documento: (row[docCol] || '').trim(),
+            activo:    normKey(row[activeCol]) === 'si',
+          });
+        }
+        return result;
+      } catch (err) {
+        console.warn('No se pudieron leer los certificados con formato Hermes', err);
+        return {};
+      }
     }
 
     function normKey(text) {
@@ -461,10 +496,10 @@
     // ────────────────────────────────────────────────────────────────
     async function cargarDatos() {
       try {
-        const [resp, meta] = await Promise.all([fetch(SHEET_URL), cargarMetadatos()]);
+        const [resp, meta, hermes] = await Promise.all([fetch(SHEET_URL), cargarMetadatos(), cargarHermes()]);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const text = await resp.text();
-        db = parseCSV(text);
+        db = { ...parseCSV(text), ...hermes };
 
         picker.events = Object.keys(db).map((key, i) => {
           const info = meta[normKey(key)] || {};
@@ -493,7 +528,7 @@
     // Búsqueda
     // ────────────────────────────────────────────────────────────────
     function ocultarMensajes() {
-      ['msgGenerando','msgNoEncontrado','msgSinEvento','msgError']
+      ['msgGenerando','msgNoEncontrado','msgInactivo','msgSinEvento','msgError']
         .forEach(id => document.getElementById(id).classList.add('hidden'));
     }
 
@@ -533,6 +568,10 @@
         mostrar('msgNoEncontrado');
         return;
       }
+      if (participante.activo === false) {
+        mostrar('msgInactivo');
+        return;
+      }
 
       participanteActual = participante;
       eventoActual       = evento;
@@ -565,6 +604,11 @@
 
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({}));
+          if (err.inactivo) {
+            ocultarMensajes();
+            mostrar('msgInactivo');
+            return;
+          }
           throw new Error(err.error || 'Error ' + resp.status);
         }
 
