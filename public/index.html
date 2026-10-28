@@ -81,7 +81,7 @@
     <div id="msgInactivo" class="message hidden">
       <p class="alert alert--warning">
         Tu certificado no está habilitado porque no se registró tu asistencia. Si asististe, escríbenos a
-        <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=comunicacionesfcen_man@unal.edu.co" target="_blank" rel="noopener">comunicacionesfcen_man@unal.edu.co</a>
+        <a class="contact-email" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=comunicacionesfcen_man@unal.edu.co" target="_blank" rel="noopener">comunicacionesfcen_man@unal.edu.co</a>
       </p>
     </div>
 
@@ -111,7 +111,7 @@
       </ol>
       <p class="help-contact">
         ¿No aparece tu certificado o tiene un dato errado? Escríbenos a
-        <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=comunicacionesfcen_man@unal.edu.co" target="_blank" rel="noopener">comunicacionesfcen_man@unal.edu.co</a>
+        <a class="contact-email" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=comunicacionesfcen_man@unal.edu.co" target="_blank" rel="noopener">comunicacionesfcen_man@unal.edu.co</a>
       </p>
     </section>
 
@@ -140,6 +140,19 @@
       'congreso internacional de materiales 2026': { src: 'iconos/cim-2026.png', bg: '#0d1b3e' },
     };
     const DEFAULT_ICON = { src: 'iconos/evento.png', bg: '#0B2E59' };
+
+    const EVENT_CONTACTS = {
+      'congreso internacional de materiales 2026': 'cim2026_man@unal.edu.co',
+    };
+    const DEFAULT_CONTACT = 'comunicacionesfcen_man@unal.edu.co';
+
+    function setContact(key) {
+      const email = EVENT_CONTACTS[normKey(key)] || DEFAULT_CONTACT;
+      document.querySelectorAll('.contact-email').forEach(link => {
+        link.href = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + email;
+        link.textContent = email;
+      });
+    }
 
     const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
       'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -418,6 +431,7 @@
 
       picker.value.textContent = '';
       picker.value.appendChild(eventBlock(picker.events[i]));
+      setContact(picker.events[i].key);
       picker.trigger.classList.remove('is-invalid');
       document.getElementById('msgSinEvento').classList.add('hidden');
       closeList();
