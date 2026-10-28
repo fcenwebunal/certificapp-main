@@ -162,24 +162,27 @@ function generateHermesCertificate(data) {
       if (text) line(text, LEFT, SIGNER.first + i * SIGNER.pitch + shift, SIGNER.size);
     });
 
-    // Centered on the text column; it drops half a point at a time until it fits.
-    const parts = [
-      { text: 'Verificación de certificado en ', color: '#000000' },
-      { text: VERIFY_URL, color: '#0000FF' },
-      { text: `, con código de seguridad: ${codigo_seguridad}`, color: '#000000' },
-    ];
-    let size = FOOTER.size;
-    const footerWidth = () => {
-      doc.fontSize(size);
-      return parts.reduce((sum, p) => sum + width(p.text), 0);
-    };
-    while (footerWidth() > WIDTH + FIT_TOLERANCE && size > FOOTER.step) size -= FOOTER.step;
-    let x = FOOTER.center - footerWidth() / 2;
-    const y = FOOTER.baseline - (FOOTER.size - size) * FOOTER.drop;
-    for (const p of parts) {
-      doc.fillColor(p.color);
-      line(p.text, x, y, size);
-      x += width(p.text);
+    // Centered on the text column; it drops half a point at a time until it fits. Attendees
+    // added without a Hermes certificate have no code, so they get no verification line.
+    if (codigo_seguridad.trim()) {
+      const parts = [
+        { text: 'Verificación de certificado en ', color: '#000000' },
+        { text: VERIFY_URL, color: '#0000FF' },
+        { text: `, con código de seguridad: ${codigo_seguridad.trim()}`, color: '#000000' },
+      ];
+      let size = FOOTER.size;
+      const footerWidth = () => {
+        doc.fontSize(size);
+        return parts.reduce((sum, p) => sum + width(p.text), 0);
+      };
+      while (footerWidth() > WIDTH + FIT_TOLERANCE && size > FOOTER.step) size -= FOOTER.step;
+      let x = FOOTER.center - footerWidth() / 2;
+      const y = FOOTER.baseline - (FOOTER.size - size) * FOOTER.drop;
+      for (const p of parts) {
+        doc.fillColor(p.color);
+        line(p.text, x, y, size);
+        x += width(p.text);
+      }
     }
 
     doc.end();
