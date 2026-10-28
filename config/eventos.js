@@ -12,7 +12,7 @@ let cacheTime = 0;
 const TTL_MS = 5 * 60 * 1000;  // refresca cada 5 minutos
 
 // Columns: eventoKey, evento, fecha, horas, fechaCert and, for events whose `formato` is
-// "hermes", dependencia, participacion, ciudad, modalidad, firma and the signer columns.
+// "hermes", `firma` and one column per fixed line of the certificate (see generate-hermes.js).
 function parseEventosCSV(text) {
   const result = {};
   for (const row of parseCSV(text)) {

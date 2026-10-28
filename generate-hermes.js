@@ -35,8 +35,6 @@ const SIGNATURE = { x: 85, y: 582, width: 180, height: 50 };
 const SIGNER    = { size: 8, first: 639.7, pitch: 11.6 };
 const FOOTER    = { size: 10, step: 0.5, baseline: 761, drop: 0.34, center: LEFT + WIDTH / 2 };
 
-const VERIFY_URL = 'http://www.hermes.unal.edu.co';
-
 /**
  * Generates a certificate that copies the Hermes format and returns the PDF Buffer.
  * Takes the participant row of `datos_hermes` merged with its event row of `eventos`.
@@ -51,17 +49,21 @@ function generateHermesCertificate(data) {
     documento        = '',
     codigo_seguridad = '',
     dependencia      = '',
+    encabezado_2     = '',
+    encabezado_3     = '',
+    certifican       = '',
+    identificacion   = '',
     participacion    = '',
     evento           = '',
-    fecha            = '',
-    ciudad           = '',
-    modalidad        = '',
-    horas            = '',
-    fechaCert        = '',
+    realizado        = '',
+    dado             = '',
     firma            = '',
     firmante         = '',
     cargo_firmante   = '',
     entidad_firmante = '',
+    pie_antes        = '',
+    pie_url          = '',
+    pie_despues      = '',
   } = data;
 
   const signature = firma ? SIGNATURES[firma] : null;
@@ -112,9 +114,9 @@ function generateHermesCertificate(data) {
 
     doc.image(A.logo, LOGO.x, LOGO.y, { width: LOGO.width, height: LOGO.height });
 
-    const header = [dependencia, 'FACULTAD DE CIENCIAS EXACTAS Y NATURALES', 'SEDE MANIZALES'].filter(Boolean);
+    const header = [dependencia, encabezado_2, encabezado_3].filter(Boolean);
     header.forEach((text, i) => line(text, LEFT, HEADER.first + i * HEADER.pitch, HEADER.size));
-    line('CERTIFICAN QUE', LEFT, HEADER.first + HEADER.certifyLine * HEADER.pitch, HEADER.size);
+    if (certifican) line(certifican, LEFT, HEADER.first + HEADER.certifyLine * HEADER.pitch, HEADER.size);
 
     // The name box is 60 pt high and centers one line; longer names grow it and push down
     // everything below except the footer.
@@ -126,7 +128,8 @@ function generateHermesCertificate(data) {
     });
     let shift = Math.max(0, nameHeight - NAME.box);
 
-    line(`CON IDENTIFICACIÓN ${tipo_documento}${documento}`, LEFT, IDENT.first + shift, IDENT.size);
+    const ident = [identificacion, `${tipo_documento}${documento}`].filter(Boolean).join(' ');
+    line(ident, LEFT, IDENT.first + shift, IDENT.size);
     line(participacion, LEFT, IDENT.first + 2 * IDENT.pitch + shift, IDENT.size);
 
     const eventLines = wrap(evento, EVENT.size);
@@ -134,8 +137,7 @@ function generateHermesCertificate(data) {
     shift += Math.max(0, eventLines.length - EVENT.lines) * EVENT.pitch;
 
     // Justified: OpenPDF gives the last line the word spacing of the line before it when it fits.
-    const held = `REALIZADO ${fecha} EN LA CIUDAD DE ${ciudad}, MEDIANTE MODALIDAD ${modalidad}, CON UNA INTENSIDAD DE ${horas} HORAS.`;
-    const heldLines = wrap(held, HELD.size);
+    const heldLines = realizado ? wrap(realizado, HELD.size) : [];
     const space = width(' ');
     let extra = 0;
     heldLines.forEach((text, i) => {
@@ -151,7 +153,7 @@ function generateHermesCertificate(data) {
       }
     });
     shift += Math.max(0, heldLines.length - HELD.lines) * HELD.pitch;
-    line(`DADO EN ${ciudad}, EL ${fechaCert}.`, LEFT, HELD.first + (HELD.lines + 1) * HELD.pitch + shift, HELD.size);
+    if (dado) line(dado, LEFT, HELD.first + (HELD.lines + 1) * HELD.pitch + shift, HELD.size);
 
     if (signature) {
       doc.image(signature, SIGNATURE.x, SIGNATURE.y + shift, {
@@ -166,10 +168,10 @@ function generateHermesCertificate(data) {
     // added without a Hermes certificate have no code, so they get no verification line.
     if (codigo_seguridad.trim()) {
       const parts = [
-        { text: 'Verificación de certificado en ', color: '#000000' },
-        { text: VERIFY_URL, color: '#0000FF' },
-        { text: `, con código de seguridad: ${codigo_seguridad.trim()}`, color: '#000000' },
-      ];
+        { text: pie_antes ? `${pie_antes} ` : '', color: '#000000' },
+        { text: pie_url, color: '#0000FF' },
+        { text: [pie_despues, codigo_seguridad.trim()].filter(Boolean).join(' '), color: '#000000' },
+      ].filter(p => p.text.trim());
       let size = FOOTER.size;
       const footerWidth = () => {
         doc.fontSize(size);
