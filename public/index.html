@@ -62,12 +62,12 @@
 
     <!-- Búsqueda del trabajo (certificados de ponencia) -->
     <div id="workGroup" hidden>
-      <label for="trabajoInput" class="field-label">Tu nombre o el código del trabajo</label>
+      <label for="trabajoInput" class="field-label">Tu documento, tu nombre o el código del trabajo</label>
       <input
         id="trabajoInput"
         type="search"
         class="field"
-        placeholder="Ej.: María Pérez o CIM-313"
+        placeholder="Ej.: 1004321987, María Pérez o CIM-313"
         autocomplete="off"
         aria-controls="trabajoResultados"
         aria-describedby="trabajoResumen"
@@ -142,7 +142,7 @@
       </ol>
       <ol id="ayudaTrabajo" class="help-steps" hidden>
         <li>Elige el evento y el tipo de certificado <strong>Ponencia</strong>.</li>
-        <li>Escribe tu nombre, una palabra del título o el código del trabajo (por ejemplo, CIM-313).</li>
+        <li>Escribe tu número de documento (sin puntos ni espacios), tu nombre, una palabra del título o el código del trabajo (por ejemplo, CIM-313).</li>
         <li>Presiona tu trabajo en la lista y el certificado, con todos sus autores, se descarga en PDF.</li>
       </ol>
       <p class="help-contact">
@@ -338,6 +338,8 @@
           autores: row.autores.split(';').map(a => a.trim()).filter(Boolean),
           activo:  normKey(row.activo) === 'si',
           search:  normKey([row.codigo, row.titulo, row.autores].join(' ')),
+          // Authors' documents, only to find the work by an exact match; they are never shown.
+          docs:    new Set((row.documentos || '').split(';').map(normDoc).filter(Boolean)),
         }));
     }
 
@@ -567,10 +569,14 @@
       if (work) renderWorks();
     }
 
+    // A query that is a whole document number finds the works of that author; anything else
+    // searches code, title and authors.
     function matchingWorks(query) {
       const event = normKey(picker.events[picker.selected].key);
+      const doc   = normDoc(query);
       const terms = normKey(query).split(/\s+/).filter(Boolean);
-      return trabajos.filter(w => w.evento === event && terms.every(t => w.search.includes(t)));
+      return trabajos.filter(w => w.evento === event
+        && (w.docs.has(doc) || terms.every(t => w.search.includes(t))));
     }
 
     function renderWorks() {
@@ -587,7 +593,7 @@
       }
       const found = matchingWorks(query);
       if (!found.length) {
-        summary.textContent = 'No hay trabajos que coincidan. Prueba con tu apellido o con el código del trabajo.';
+        summary.textContent = 'No hay trabajos que coincidan. Prueba con tu apellido o con el código del trabajo: si no asististe al congreso, tu documento no está en la lista.';
         return;
       }
       summary.textContent = found.length > MAX_RESULTS

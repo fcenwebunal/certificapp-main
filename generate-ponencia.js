@@ -26,12 +26,16 @@ const HELD_WIDTH  = 408;
 const LOGO        = { x: 374, y: 31, width: 205, height: 89.95 };
 const HEADER      = { size: 12, first: 184.04, pitch: 17.955 };
 const CERTIFY     = { size: 12, y: 286.99 };
-const NAMES       = { size: 14, first: 307.38, pitch: 16, column: 220, columnsFrom: 7 };
+const NAMES       = { size: 14, first: 307.38, pitch: 16, column: 220, columnsFrom: 6 };
 const BODY        = { size: 12, pitch: 14.4 };
 const EVENT       = { size: 14 };
 const GAPS        = { participation: 41.1, title: 20.8, event: 43.06, held: 26.58, given: 39.38 };
 const MIN_GAPS    = { participation: 26, title: 18, event: 28, held: 20, given: 26 };
-const LAST_GIVEN  = 598;
+// Where the place and date sit on the sample; longer certificates first use the blank space
+// under the header (CERTIFICAN QUE may rise up to MAX_RISE) and only then shrink the gaps.
+const LAST_GIVEN  = 583.91;
+const MIN_HEADER_GAP = 30;
+const MAX_RISE    = CERTIFY.y - (HEADER.first + 2 * HEADER.pitch) - MIN_HEADER_GAP;
 const SIGNATURE   = { x: LEFT, bottom: 663, width: 160, height: 50 };
 const SIGNER      = { size: 12, first: 677.84, pitch: 14.4, last: 770 };
 
@@ -126,9 +130,7 @@ function generateWorkCertificate(data) {
 
     [dependencia, encabezado_2, encabezado_3].filter(Boolean)
       .forEach((text, i) => line(text, HEADER.first + i * HEADER.pitch, 'regular', HEADER.size));
-    if (certifican) line(certifican, CERTIFY.y, 'regular', CERTIFY.size);
-
-    // Seven or more authors go in two columns when every name fits in one.
+    // Six or more authors go in two columns when every name fits in one.
     const twoColumns = authors.length >= NAMES.columnsFrom
       && authors.every(name => width(name, 'names', NAMES.size) <= NAMES.column - 8);
     const nameRows = twoColumns ? Math.ceil(authors.length / 2) : authors.length;
@@ -149,11 +151,14 @@ function generateWorkCertificate(data) {
     const event2Lines = evento_2 ? wrap(evento_2, 'regular', BODY.size, WIDTH) : [];
     const heldLines = realizado ? wrap(realizado, 'regular', BODY.size, HELD_WIDTH) : [];
 
-    // Long lists or titles shrink the gaps between blocks, down to MIN_GAPS, so that the
-    // place and date stay above the signature.
-    const layout = gaps => {
+    // A certificate longer than the sample first moves everything from CERTIFICAN QUE up
+    // into the blank space under the header; if that is not enough, the gaps between blocks
+    // shrink together down to MIN_GAPS, so the place and date stay above the signature.
+    const layout = (gaps, rise) => {
       const y = {};
-      y.lastName = NAMES.first + (nameHeight - 1) * NAMES.pitch;
+      y.certify = CERTIFY.y - rise;
+      y.names = NAMES.first - rise;
+      y.lastName = y.names + (nameHeight - 1) * NAMES.pitch;
       y.participation = y.lastName + gaps.participation;
       y.title = y.participation + gaps.title;
       y.event = y.title + Math.max(0, titleLines.length - 1) * BODY.pitch + gaps.event;
@@ -165,21 +170,23 @@ function generateWorkCertificate(data) {
       y.given = y.held + Math.max(0, heldLines.length - 1) * BODY.pitch + gaps.given;
       return y;
     };
-    let y = layout(GAPS);
+    const rise = Math.min(MAX_RISE, Math.max(0, layout(GAPS, 0).given - LAST_GIVEN));
+    let y = layout(GAPS, rise);
     if (y.given > LAST_GIVEN) {
       const keys = Object.keys(GAPS);
       const room = keys.reduce((sum, k) => sum + GAPS[k] - MIN_GAPS[k], 0);
       const ratio = Math.min(1, (y.given - LAST_GIVEN) / room);
-      y = layout(Object.fromEntries(keys.map(k => [k, GAPS[k] - (GAPS[k] - MIN_GAPS[k]) * ratio])));
+      y = layout(Object.fromEntries(keys.map(k => [k, GAPS[k] - (GAPS[k] - MIN_GAPS[k]) * ratio])), rise);
     }
 
+    if (certifican) line(certifican, y.certify, 'regular', CERTIFY.size);
     let row = 0;
     authors.forEach((name, i) => {
       if (twoColumns) {
         const column = i < nameRows ? 0 : 1;
-        line(name, NAMES.first + (i % nameRows) * NAMES.pitch, 'names', NAMES.size, LEFT + column * NAMES.column);
+        line(name, y.names + (i % nameRows) * NAMES.pitch, 'names', NAMES.size, LEFT + column * NAMES.column);
       } else {
-        nameLines[i].forEach(text => line(text, NAMES.first + row++ * NAMES.pitch, 'names', NAMES.size));
+        nameLines[i].forEach(text => line(text, y.names + row++ * NAMES.pitch, 'names', NAMES.size));
       }
     });
 
