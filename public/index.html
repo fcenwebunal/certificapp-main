@@ -40,17 +40,41 @@
       <ul id="eventoList" class="picker-list" role="listbox" aria-labelledby="eventoLabel" hidden></ul>
     </div>
 
+    <!-- Tipo de certificado: solo en los eventos que tienen más de uno (pestaña tipos_certificado) -->
+    <div id="tipoGroup" hidden>
+      <label for="tipoSelect" class="field-label">Tipo de certificado</label>
+      <select id="tipoSelect" class="field field--select"></select>
+    </div>
+
     <!-- Input cédula -->
-    <label for="cedulaInput" class="field-label">
-      Número de documento
-    </label>
-    <input
-      id="cedulaInput"
-      type="text"
-      class="field"
-      placeholder="Ej.: 1004321987"
-      autocomplete="off"
-    />
+    <div id="docGroup">
+      <label for="cedulaInput" class="field-label">
+        Número de documento
+      </label>
+      <input
+        id="cedulaInput"
+        type="text"
+        class="field"
+        placeholder="Ej.: 1004321987"
+        autocomplete="off"
+      />
+    </div>
+
+    <!-- Búsqueda del trabajo (certificados de ponencia) -->
+    <div id="workGroup" hidden>
+      <label for="trabajoInput" class="field-label">Tu nombre o el código del trabajo</label>
+      <input
+        id="trabajoInput"
+        type="search"
+        class="field"
+        placeholder="Ej.: María Pérez o CIM-313"
+        autocomplete="off"
+        aria-controls="trabajoResultados"
+        aria-describedby="trabajoResumen"
+      />
+      <p id="trabajoResumen" class="results-summary" aria-live="polite"></p>
+      <ul id="trabajoResultados" class="results"></ul>
+    </div>
 
     <div class="actions">
       <button id="btnBuscar" class="button" onclick="buscarCedula()">
@@ -85,6 +109,13 @@
       </p>
     </div>
 
+    <div id="msgTrabajoInactivo" class="message hidden">
+      <p class="alert alert--warning">
+        El certificado de este trabajo no está habilitado. Si lo presentaste, escríbenos a
+        <a class="contact-email" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=comunicacionesfcen_man@unal.edu.co" target="_blank" rel="noopener">comunicacionesfcen_man@unal.edu.co</a>
+      </p>
+    </div>
+
     <div id="msgSinEvento" class="message hidden">
       <p class="alert alert--warning">
         Por favor selecciona un evento antes de buscar.
@@ -104,10 +135,15 @@
     </div>
 
     <section id="ayuda" class="help" aria-label="Ayuda" hidden>
-      <ol class="help-steps">
+      <ol id="ayudaDocumento" class="help-steps">
         <li>Elige el evento al que asististe.</li>
         <li>Escribe tu número de documento, sin puntos ni espacios.</li>
         <li>Presiona <strong>Buscar y descargar</strong> y el certificado se descarga en PDF.</li>
+      </ol>
+      <ol id="ayudaTrabajo" class="help-steps" hidden>
+        <li>Elige el evento y el tipo de certificado <strong>Ponencia</strong>.</li>
+        <li>Escribe tu nombre, una palabra del título o el código del trabajo (por ejemplo, CIM-313).</li>
+        <li>Presiona tu trabajo en la lista y el certificado, con todos sus autores, se descarga en PDF.</li>
       </ol>
       <p class="help-contact">
         ¿No aparece tu certificado o tiene un dato errado? Escríbenos a
@@ -126,6 +162,11 @@
     const EVENTS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQaw34NyGZJdnMGDK31dVxYzRR44Fve-QX6X18Nl6IJPk_krB58D0v7dMdwW6HDLWDQxw4GFmF0yfjt/pub?gid=2018966166&single=true&output=csv';
     // `datos_hermes`: one row per certificate of the events that copy the Hermes format.
     const HERMES_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQaw34NyGZJdnMGDK31dVxYzRR44Fve-QX6X18Nl6IJPk_krB58D0v7dMdwW6HDLWDQxw4GFmF0yfjt/pub?gid=604129353&single=true&output=csv';
+    // `tipos_certificado`: the kinds of certificate of the events that have more than one, in sheet order.
+    const TYPES_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQaw34NyGZJdnMGDK31dVxYzRR44Fve-QX6X18Nl6IJPk_krB58D0v7dMdwW6HDLWDQxw4GFmF0yfjt/pub?gid=1247620951&single=true&output=csv';
+    // `datos_ponencias`: one row per presented work, with all its authors.
+    const WORKS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQaw34NyGZJdnMGDK31dVxYzRR44Fve-QX6X18Nl6IJPk_krB58D0v7dMdwW6HDLWDQxw4GFmF0yfjt/pub?gid=1223383015&single=true&output=csv';
+    const MAX_RESULTS = 8;
 
     // Keys are eventoKey (row 1 of `datos`) without accents and in lowercase. Each logo is cut from the
     // event's own site and sits on the background color of that site, since several of them are white.
@@ -163,6 +204,9 @@
     // ── Participante encontrado (se guarda para reutilizar en descarga)
     let participanteActual = null;
     let eventoActual       = null;
+
+    let tiposPorEvento = {};
+    let trabajos       = [];
 
     function parseCSV(text) {
       // Normalizar saltos de línea y separar filas
@@ -255,6 +299,46 @@
         console.warn('No se pudieron leer los certificados con formato Hermes', err);
         return {};
       }
+    }
+
+    // Reads a published tab into objects keyed by its header row; a tab that fails leaves the app as it was.
+    async function cargarPestana(url, label) {
+      try {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const [headers = [], ...rows] = parseQuotedCSV(await resp.text());
+        const keys = headers.map(h => h.trim());
+        return rows
+          .filter(row => row.some(cell => cell.trim()))
+          .map(row => Object.fromEntries(keys.map((k, i) => [k, (row[i] || '').trim()])));
+      } catch (err) {
+        console.warn('No se pudo leer la pestaña ' + label, err);
+        return [];
+      }
+    }
+
+    // { eventoKey normalizado: [{ tipo, formato }] }
+    async function cargarTipos() {
+      const result = {};
+      for (const row of await cargarPestana(TYPES_URL, 'tipos_certificado')) {
+        if (!row.eventoKey || !row.tipo) continue;
+        (result[normKey(row.eventoKey)] = result[normKey(row.eventoKey)] || [])
+          .push({ tipo: row.tipo, formato: row.formato });
+      }
+      return result;
+    }
+
+    async function cargarTrabajos() {
+      return (await cargarPestana(WORKS_URL, 'datos_ponencias'))
+        .filter(row => row.codigo && row.evento)
+        .map(row => ({
+          evento:  normKey(row.evento),
+          codigo:  row.codigo,
+          titulo:  row.titulo || row.titulo_certificado,
+          autores: row.autores.split(';').map(a => a.trim()).filter(Boolean),
+          activo:  normKey(row.activo) === 'si',
+          search:  normKey([row.codigo, row.titulo, row.autores].join(' ')),
+        }));
     }
 
     function normKey(text) {
@@ -436,9 +520,150 @@
       document.getElementById('msgSinEvento').classList.add('hidden');
       closeList();
 
+      if (updateTypes(picker.events[i].key)) {
+        document.getElementById('tipoSelect').focus();
+        return;
+      }
       const input = document.getElementById('cedulaInput');
       if (input.value.trim()) picker.trigger.focus();
       else input.focus();
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Tipo de certificado y búsqueda del trabajo
+    // ────────────────────────────────────────────────────────────────
+    // Shows the second selector when the event has kinds of certificate; returns whether it did.
+    function updateTypes(key) {
+      const types  = tiposPorEvento[normKey(key)] || [];
+      const select = document.getElementById('tipoSelect');
+      select.textContent = '';
+      types.forEach((type, i) => select.add(new Option(type.tipo, String(i))));
+      document.getElementById('tipoGroup').hidden = types.length === 0;
+      applyType();
+      return types.length > 0;
+    }
+
+    // The selected kind, or null when the event has only its own certificate.
+    function currentType() {
+      if (picker.selected < 0) return null;
+      const types = tiposPorEvento[normKey(picker.events[picker.selected].key)] || [];
+      return types[Number(document.getElementById('tipoSelect').value)] || null;
+    }
+
+    // The kind with `formato = evento` is the event's own certificate, found by document.
+    function isWorkMode() {
+      const type = currentType();
+      return Boolean(type && type.formato !== 'evento');
+    }
+
+    function applyType() {
+      const work = isWorkMode();
+      document.getElementById('docGroup').hidden = work;
+      document.getElementById('btnBuscar').hidden = work;
+      document.getElementById('workGroup').hidden = !work;
+      document.getElementById('ayudaDocumento').hidden = work;
+      document.getElementById('ayudaTrabajo').hidden = !work;
+      ocultarMensajes();
+      if (work) renderWorks();
+    }
+
+    function matchingWorks(query) {
+      const event = normKey(picker.events[picker.selected].key);
+      const terms = normKey(query).split(/\s+/).filter(Boolean);
+      return trabajos.filter(w => w.evento === event && terms.every(t => w.search.includes(t)));
+    }
+
+    function renderWorks() {
+      const query   = document.getElementById('trabajoInput').value;
+      const list    = document.getElementById('trabajoResultados');
+      const summary = document.getElementById('trabajoResumen');
+      list.textContent = '';
+
+      if (normKey(query).replace(/\s/g, '').length < 3) {
+        summary.textContent = trabajos.length
+          ? 'Escribe al menos tres letras para ver los trabajos.'
+          : 'No se pudieron cargar los trabajos. Recarga la página para intentarlo de nuevo.';
+        return;
+      }
+      const found = matchingWorks(query);
+      if (!found.length) {
+        summary.textContent = 'No hay trabajos que coincidan. Prueba con tu apellido o con el código del trabajo.';
+        return;
+      }
+      summary.textContent = found.length > MAX_RESULTS
+        ? `${found.length} trabajos coinciden; se muestran los primeros ${MAX_RESULTS}. Escribe algo más para afinar.`
+        : (found.length === 1 ? '1 trabajo coincide.' : `${found.length} trabajos coinciden.`) + ' Presiona el tuyo para descargar.';
+
+      for (const work of found.slice(0, MAX_RESULTS)) {
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'result';
+        const code = document.createElement('span');
+        code.className = 'result-code';
+        code.textContent = work.codigo;
+        const title = document.createElement('span');
+        title.className = 'result-title';
+        title.textContent = work.titulo;
+        const authors = document.createElement('span');
+        authors.className = 'result-authors';
+        authors.textContent = work.autores.join(', ');
+        btn.append(code, title, authors);
+        btn.addEventListener('click', () => descargarTrabajo(work, btn));
+        li.appendChild(btn);
+        list.appendChild(li);
+      }
+    }
+
+    async function descargarTrabajo(work, btn) {
+      ocultarMensajes();
+      if (!work.activo) {
+        mostrar('msgTrabajoInactivo');
+        return;
+      }
+      mostrar('msgGenerando');
+      const buttons = document.querySelectorAll('.result');
+      buttons.forEach(b => { b.disabled = true; });
+      try {
+        const resp = await fetch('/api/certificado', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({
+            eventoKey: picker.events[picker.selected].key,
+            tipo:      currentType().tipo,
+            codigo:    work.codigo,
+          }),
+        });
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          if (err.inactivo) {
+            ocultarMensajes();
+            mostrar('msgTrabajoInactivo');
+            return;
+          }
+          throw new Error(err.error || 'Error ' + resp.status);
+        }
+        guardarPdf(await resp.blob(), `certificado_${work.codigo}.pdf`);
+        ocultarMensajes();
+      } catch (err) {
+        console.error(err);
+        ocultarMensajes();
+        mostrar('msgError');
+      } finally {
+        buttons.forEach(b => { b.disabled = false; });
+        btn.focus();
+      }
+    }
+
+    function guardarPdf(blob, fileName) {
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement('a');
+      a.href     = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
     }
 
     function typeAhead(char) {
@@ -510,10 +735,14 @@
     // ────────────────────────────────────────────────────────────────
     async function cargarDatos() {
       try {
-        const [resp, meta, hermes] = await Promise.all([fetch(SHEET_URL), cargarMetadatos(), cargarHermes()]);
+        const [resp, meta, hermes, tipos, works] = await Promise.all([
+          fetch(SHEET_URL), cargarMetadatos(), cargarHermes(), cargarTipos(), cargarTrabajos(),
+        ]);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const text = await resp.text();
         db = { ...parseCSV(text), ...hermes };
+        tiposPorEvento = tipos;
+        trabajos       = works;
 
         picker.events = Object.keys(db).map((key, i) => {
           const info = meta[normKey(key)] || {};
@@ -542,7 +771,7 @@
     // Búsqueda
     // ────────────────────────────────────────────────────────────────
     function ocultarMensajes() {
-      ['msgGenerando','msgNoEncontrado','msgInactivo','msgSinEvento','msgError']
+      ['msgGenerando','msgNoEncontrado','msgInactivo','msgTrabajoInactivo','msgSinEvento','msgError']
         .forEach(id => document.getElementById(id).classList.add('hidden'));
     }
 
@@ -626,15 +855,7 @@
           throw new Error(err.error || 'Error ' + resp.status);
         }
 
-        const blob = await resp.blob();
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href     = url;
-        a.download = `certificado_${participanteActual.documento}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 10_000);
+        guardarPdf(await resp.blob(), `certificado_${participanteActual.documento}.pdf`);
 
         ocultarMensajes();   // limpia el spinner, queda todo listo para otra búsqueda
       } catch (err) {
@@ -674,6 +895,11 @@
       document.getElementById('cedulaInput')
         .addEventListener('keydown', e => { if (e.key === 'Enter') buscarCedula(); });
       document.getElementById('btnAyuda').addEventListener('click', alternarAyuda);
+      document.getElementById('tipoSelect').addEventListener('change', () => {
+        applyType();
+        document.getElementById(isWorkMode() ? 'trabajoInput' : 'cedulaInput').focus();
+      });
+      document.getElementById('trabajoInput').addEventListener('input', renderWorks);
     });
   </script>
 </body>

@@ -293,9 +293,94 @@ body {
   border-color: var(--danger);
 }
 
+.field--select {
+  padding-right: 2.75rem;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='m5 7.5 5 5 5-5' fill='none' stroke='%2313477C' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  background-size: 1.25rem;
+}
+
+/* ── Work search (speaker certificates) ── */
+.results-summary {
+  margin: -0.5rem 0 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.results {
+  margin: 0 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.results:empty {
+  display: none;
+}
+
+.results li + li {
+  margin-top: 0.5rem;
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  font-family: inherit;
+  text-align: left;
+  color: var(--text);
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--verde);
+  border-radius: 0.625rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.result:hover {
+  border-color: var(--azul-claro);
+  background-color: var(--surface-soft);
+}
+
+.result:focus-visible {
+  outline: 2px solid var(--azul);
+  outline-offset: 2px;
+}
+
+.result:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.result-code {
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: var(--azul);
+}
+
+.result-title {
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  color: var(--text-strong);
+  overflow-wrap: anywhere;
+}
+
+.result-authors {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
 /* ── Actions ── */
 .actions {
   display: flex;
+  justify-content: flex-end;
   gap: 0.625rem;
 }
 
