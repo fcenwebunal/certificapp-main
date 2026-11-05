@@ -329,8 +329,9 @@
     }
 
     async function cargarTrabajos() {
+      // An inactive work is left out of the search (decision of 2026-11-05).
       return (await cargarPestana(WORKS_URL, 'datos_ponencias'))
-        .filter(row => row.codigo && row.evento)
+        .filter(row => row.codigo && row.evento && normKey(row.activo) === 'si')
         .map(row => ({
           evento:  normKey(row.evento),
           codigo:  row.codigo,
