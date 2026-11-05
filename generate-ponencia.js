@@ -42,8 +42,10 @@ const SIGNER      = { size: 12, first: 677.84, pitch: 14.4, last: 770 };
 /**
  * Generates the certificate of a presented work (all its authors on one certificate) and
  * returns the PDF Buffer. Takes the row of its kind of certificate in `tipos_certificado`
- * plus `codigo`, `titulo_certificado` and `autores` from the work row of `datos_ponencias`
- * (whose `evento` column is the eventoKey, not the event line of the certificate).
+ * plus `codigo`, `modalidad`, `titulo_certificado` and `autores` from the work row of
+ * `datos_ponencias` (whose `evento` column is the eventoKey, not the event line of the
+ * certificate). `{modalidad}` in the participation lines becomes the modality as
+ * `modalidades` spells it.
  *
  * @param {object} data
  * @returns {Promise<Buffer>}
@@ -51,6 +53,7 @@ const SIGNER      = { size: 12, first: 677.84, pitch: 14.4, last: 770 };
 function generateWorkCertificate(data) {
   const {
     codigo                 = '',
+    modalidad              = '',
     titulo_certificado     = '',
     autores                = '',
     dependencia            = '',
@@ -59,6 +62,7 @@ function generateWorkCertificate(data) {
     certifican             = '',
     participacion          = '',
     participacion_singular = '',
+    modalidades            = '',
     evento                 = '',
     evento_2               = '',
     realizado              = '',
@@ -141,9 +145,11 @@ function generateWorkCertificate(data) {
       ? nameRows
       : nameLines.reduce((sum, lines) => sum + lines.length, 0);
 
-    const participationText = authors.length === 1 && participacion_singular
-      ? participacion_singular
-      : participacion;
+    const participationText = fillModality(
+      authors.length === 1 && participacion_singular ? participacion_singular : participacion,
+      modalityText(modalidades, modalidad),
+    );
+    const participationLines = participationText ? wrap(participationText, 'regular', BODY.size, WIDTH) : [];
     const titleLines = titulo_certificado
       ? balance(`“${titulo_certificado.trim()}”`, 'regular', BODY.size, WIDTH)
       : [];
@@ -160,7 +166,7 @@ function generateWorkCertificate(data) {
       y.names = NAMES.first - rise;
       y.lastName = y.names + (nameHeight - 1) * NAMES.pitch;
       y.participation = y.lastName + gaps.participation;
-      y.title = y.participation + gaps.title;
+      y.title = y.participation + Math.max(0, participationLines.length - 1) * BODY.pitch + gaps.title;
       y.event = y.title + Math.max(0, titleLines.length - 1) * BODY.pitch + gaps.event;
       y.event2 = y.event + Math.max(0, eventLines.length - 1) * BODY.pitch + BODY.pitch;
       const eventEnd = event2Lines.length
@@ -190,7 +196,7 @@ function generateWorkCertificate(data) {
       }
     });
 
-    if (participationText) line(participationText, y.participation, 'regular', BODY.size);
+    participationLines.forEach((text, i) => line(text, y.participation + i * BODY.pitch, 'regular', BODY.size));
     titleLines.forEach((text, i) => line(text, y.title + i * BODY.pitch, 'regular', BODY.size));
     eventLines.forEach((text, i) => line(text, y.event + i * BODY.pitch, 'bold', EVENT.size));
     event2Lines.forEach((text, i) => line(text, y.event2 + i * BODY.pitch, 'regular', BODY.size));
@@ -220,4 +226,25 @@ function splitAuthors(text) {
   return (text || '').split(';').map(name => name.replace(/\s+/g, ' ').trim()).filter(Boolean);
 }
 
-module.exports = { generateWorkCertificate, splitAuthors };
+const fold = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+
+// `modalidades` spells each modality on the certificate: «Oral=PONENCIA ORAL; Póster=PÓSTER».
+// A modality missing from it is printed in capitals as the work row has it.
+function modalityText(modalidades, modalidad) {
+  if (!fold(modalidad)) return '';
+  for (const pair of (modalidades || '').split(';')) {
+    const [from, to] = pair.split('=');
+    if (to !== undefined && fold(from) === fold(modalidad)) return to.trim();
+  }
+  return modalidad.trim().toLocaleUpperCase('es');
+}
+
+// Without a modality, «EN LA MODALIDAD {modalidad}» leaves the line altogether.
+function fillModality(text, modality) {
+  const filled = modality
+    ? (text || '').replace(/\{modalidad\}/gi, modality)
+    : (text || '').replace(/\s*(EN\s+(LA\s+)?MODALIDAD\s+(DE\s+)?)?\{modalidad\}/gi, '');
+  return filled.replace(/\s+/g, ' ').trim();
+}
+
+module.exports = { generateWorkCertificate, splitAuthors, modalityText, fillModality };

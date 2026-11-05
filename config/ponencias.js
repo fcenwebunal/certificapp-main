@@ -45,6 +45,7 @@ async function findWork(eventoKey, codigo) {
   if (!row) return null;
   return {
     codigo:             row.codigo,
+    modalidad:          row.modalidad || '',
     titulo_certificado: row.titulo_certificado,
     autores:            row.autores,
     activo:             normKey(row.activo) === 'si',

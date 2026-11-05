@@ -38,6 +38,7 @@ module.exports = async (req, res) => {
       const buffer = await generateWorkCertificate({
         ...type,
         codigo:             work.codigo,
+        modalidad:          work.modalidad,
         titulo_certificado: work.titulo_certificado,
         autores:            work.autores,
       });
